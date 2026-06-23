@@ -12,10 +12,6 @@ use app\service\rbac\RbacService;
 
 final class AuthService
 {
-    private const LOCKOUT_THRESHOLD = 5;
-    private const LOCKOUT_WINDOW = 900;
-    private const LOCKOUT_DURATION = 900;
-
     public function __construct(
         private readonly AdminUserRepository $adminUserRepository = new AdminUserRepository(),
         private readonly SessionService $sessionService = new SessionService(),
@@ -28,7 +24,7 @@ final class AuthService
     {
         $username = trim($username);
         if ($username === '') {
-            throw new BusinessException('请输入账号', ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('用户名不能为空。', ErrorCode::INVALID_PARAMS);
         }
 
         $this->checkLoginLockout($username);
@@ -37,19 +33,19 @@ final class AuthService
         if ($user === null) {
             $this->recordLoginFailure($username);
             $this->operationLogService->recordLoginAttempt($username, false, null, 'invalid credentials');
-            throw new BusinessException('账号或密码错误', ErrorCode::UNAUTHORIZED);
+            throw new BusinessException('账号或密码错误。', ErrorCode::UNAUTHORIZED);
         }
 
         if (!$this->adminUserRepository->verifyPassword($user, $password)) {
             $this->recordLoginFailure($username);
             $this->operationLogService->recordLoginAttempt($username, false, (int) ($user['id'] ?? 0), 'invalid credentials');
-            throw new BusinessException('账号或密码错误', ErrorCode::UNAUTHORIZED);
+            throw new BusinessException('账号或密码错误。', ErrorCode::UNAUTHORIZED);
         }
 
         if ((int) ($user['status'] ?? 0) !== 1) {
             $this->recordLoginFailure($username);
             $this->operationLogService->recordLoginAttempt($username, false, (int) ($user['id'] ?? 0), 'user disabled');
-            throw new BusinessException('账号已禁用', ErrorCode::USER_DISABLED);
+            throw new BusinessException('账号已禁用。', ErrorCode::USER_DISABLED);
         }
 
         $tokens = $this->sessionService->issueTokens($user);
@@ -64,7 +60,7 @@ final class AuthService
             'target_id' => $user['id'],
             'request_method' => request()?->method(),
             'request_path' => request()?->path(),
-            'request_ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+            'request_ip' => $this->requestIp(),
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
             'result_code' => 0,
             'result_message' => 'login success',
@@ -90,7 +86,7 @@ final class AuthService
     {
         $tokens = $this->sessionService->refresh($refreshToken);
         if ($tokens === null) {
-            throw new BusinessException('刷新令牌无效', ErrorCode::INVALID_REFRESH_TOKEN);
+            throw new BusinessException('refresh token 已失效', ErrorCode::INVALID_REFRESH_TOKEN);
         }
 
         return $tokens;
@@ -98,7 +94,7 @@ final class AuthService
 
     public function logout(string $authorization): void
     {
-        $token = trim(str_ireplace('Bearer', '', $authorization));
+        $token = $this->parseBearerToken($authorization);
         $user = current_user();
         $this->sessionService->revokeByAccessToken($token);
 
@@ -113,7 +109,7 @@ final class AuthService
                 'target_id' => $user['id'] ?? null,
                 'request_method' => request()?->method(),
                 'request_path' => request()?->path(),
-                'request_ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                'request_ip' => $this->requestIp(),
                 'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
                 'result_code' => 0,
                 'result_message' => 'logout success',
@@ -128,7 +124,7 @@ final class AuthService
     {
         $user = current_user();
         if ($user === null) {
-            throw new BusinessException('登录状态已失效', ErrorCode::UNAUTHORIZED);
+            throw new BusinessException('登录会话已失效', ErrorCode::UNAUTHORIZED);
         }
 
         return [
@@ -146,32 +142,35 @@ final class AuthService
             return;
         }
 
-        $cutoff = date('Y-m-d H:i:s', time() - self::LOCKOUT_WINDOW);
-        $statement = $pdo->prepare(
+        $loginKey = $this->loginFailureKey($username);
+        $windowSeconds = $this->configInt('auth.login_window_seconds', 900);
+        $maxAttempts = $this->configInt('auth.login_max_attempts', 5);
+        $lockSeconds = $this->configInt('auth.login_lock_seconds', 900);
+        $cutoff = date('Y-m-d H:i:s', time() - $windowSeconds);
+
+        $countStatement = $pdo->prepare(
             'SELECT COUNT(*) AS failure_count
              FROM admin_login_logs
-             WHERE username = :username AND is_success = 0 AND created_at > :cutoff'
+             WHERE login_key = :login_key AND is_success = 0 AND created_at > :cutoff'
         );
-        $statement->execute([
-            'username' => $username,
+        $countStatement->execute([
+            'login_key' => $loginKey,
             'cutoff' => $cutoff,
         ]);
-        $row = $statement->fetch();
+        $countRow = $countStatement->fetch();
 
-        if (!is_array($row) || (int) ($row['failure_count'] ?? 0) < self::LOCKOUT_THRESHOLD) {
+        if (!is_array($countRow) || (int) ($countRow['failure_count'] ?? 0) < $maxAttempts) {
             return;
         }
 
         $lastStatement = $pdo->prepare(
             'SELECT created_at
              FROM admin_login_logs
-             WHERE username = :username AND is_success = 0
+             WHERE login_key = :login_key AND is_success = 0
              ORDER BY created_at DESC
              LIMIT 1'
         );
-        $lastStatement->execute([
-            'username' => $username,
-        ]);
+        $lastStatement->execute(['login_key' => $loginKey]);
         $lastRow = $lastStatement->fetch();
 
         if (!is_array($lastRow) || empty($lastRow['created_at'])) {
@@ -179,10 +178,10 @@ final class AuthService
         }
 
         $lastTime = strtotime((string) $lastRow['created_at']);
-        $elapsed = time() - $lastTime;
-        $remaining = max(0, self::LOCKOUT_DURATION - $elapsed);
+        $elapsed = time() - (int) $lastTime;
+        $remaining = max(0, $lockSeconds - $elapsed);
         if ($remaining > 0) {
-            throw new BusinessException('登录失败次数过多，请稍后重试', 429);
+            throw new BusinessException('登录失败次数过多，请稍后再试。', 429);
         }
     }
 
@@ -194,13 +193,51 @@ final class AuthService
         }
 
         $statement = $pdo->prepare(
-            'INSERT INTO admin_login_logs (username, login_ip, is_success, reason, created_at)
-             VALUES (:username, :ip, 0, :reason, NOW())'
+            'INSERT INTO admin_login_logs (username, login_key, login_ip, is_success, reason, created_at)
+             VALUES (:username, :login_key, :ip, 0, :reason, NOW())'
         );
         $statement->execute([
             'username' => $username,
-            'ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+            'login_key' => $this->loginFailureKey($username),
+            'ip' => $this->requestIp(),
             'reason' => 'login_failure',
         ]);
     }
+
+    private function loginFailureKey(string $username): string
+    {
+        return strtolower(trim($username)) . '|' . $this->requestIp();
+    }
+
+    private function configInt(string $key, int $default): int
+    {
+        $value = (int) config($key, $default);
+        if ($value < 1) {
+            return $default;
+        }
+
+        return $value;
+    }
+
+    private function requestIp(): string
+    {
+        $ip = (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['HTTP_X_REAL_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '');
+        if (str_contains($ip, ',')) {
+            $ip = trim((string) explode(',', $ip)[0]);
+        } else {
+            $ip = trim($ip);
+        }
+
+        return $ip === '' ? '127.0.0.1' : $ip;
+    }
+
+    private function parseBearerToken(string $authorization): string
+    {
+        if (!preg_match('/^Bearer\s+(.+)$/i', trim($authorization), $matches)) {
+            throw new BusinessException('登录会话已失效', ErrorCode::UNAUTHORIZED);
+        }
+
+        return trim((string) $matches[1]);
+    }
 }
+

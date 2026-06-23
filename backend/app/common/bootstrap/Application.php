@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
@@ -6,11 +6,11 @@ namespace app\common\bootstrap;
 
 use app\common\config\ConfigRepository;
 use app\common\database\DatabaseManager;
+use app\common\exception\BusinessException;
 use app\common\http\Request;
 use app\common\http\RequestContext;
 use app\common\http\ResponseEmitter;
 use app\common\http\Router;
-use app\common\exception\BusinessException;
 use app\enum\ErrorCode;
 use Throwable;
 
@@ -62,24 +62,18 @@ final class Application
             $result = $this->router->dispatch($this->request);
             ResponseEmitter::json($result, 200);
         } catch (BusinessException $exception) {
-            // FIX-13: Return 401 for authentication failures
-            $errorCode = $exception->getErrorCode();
-            $statusCode = in_array($errorCode, [ErrorCode::UNAUTHORIZED, ErrorCode::INVALID_REFRESH_TOKEN, ErrorCode::USER_DISABLED], true) ? 401 : 200;
-
             ResponseEmitter::json([
-                'code' => $errorCode,
+                'code' => $exception->getErrorCode(),
                 'message' => $exception->getMessage(),
                 'data' => null,
                 'meta' => $exception->getMeta(),
                 'request_id' => $this->request->requestId(),
                 'timestamp' => time(),
-            ], $statusCode);
+            ], $this->statusFromBusinessException($exception));
         } catch (Throwable $exception) {
-            // FIX-05: Hide exception details in production
             $debug = (bool) env('APP_DEBUG', false);
-            $message = $debug ? $exception->getMessage() : '服务器内部错误';
+            $message = $debug ? $exception->getMessage() : 'Internal server error.';
 
-            // Log the real exception for debugging
             error_log(sprintf(
                 '[FATAL] Uncaught %s: %s in %s:%d',
                 get_class($exception),
@@ -96,6 +90,31 @@ final class Application
                 'request_id' => $this->request->requestId(),
                 'timestamp' => time(),
             ], 500);
+        } finally {
+            RequestContext::clear();
         }
+    }
+
+    private function statusFromBusinessException(BusinessException $exception): int
+    {
+        $errorCode = $exception->getErrorCode();
+
+        return match (true) {
+            in_array($errorCode, [
+                ErrorCode::UNAUTHORIZED,
+                ErrorCode::INVALID_REFRESH_TOKEN,
+                ErrorCode::USER_DISABLED,
+            ], true) => 401,
+            in_array($errorCode, [
+                ErrorCode::FORBIDDEN,
+                ErrorCode::ACTION_FORBIDDEN,
+            ], true) => 403,
+            $errorCode === ErrorCode::NOT_FOUND => 404,
+            $errorCode === ErrorCode::ALREADY_EXISTS => 409,
+            $errorCode === ErrorCode::INVALID_PARAMS => 422,
+            $errorCode === 429 => 429,
+            $errorCode === ErrorCode::INTERNAL_ERROR => 500,
+            default => 400,
+        };
     }
 }

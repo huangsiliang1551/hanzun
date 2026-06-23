@@ -6,11 +6,12 @@ return [
     'disk' => env('UPLOAD_DISK', 'local'),
     'root' => env('UPLOAD_ROOT', 'public/uploads'),
     'allowed_extensions' => [
-        'image' => ['jpg', 'jpeg', 'png', 'webp', 'svg'],
+        'image' => ['jpg', 'jpeg', 'png', 'webp'],
         'video' => ['mp4', 'webm'],
         'pdf' => ['pdf'],
     ],
     'blocked_extensions' => [
+        'svg',
         'php',
         'php3',
         'php4',
@@ -40,7 +41,7 @@ return [
         'pdf' => (int) env('UPLOAD_MAX_PDF_SIZE', 20 * 1024 * 1024),
     ],
     'mime_types' => [
-        'image' => ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+        'image' => ['image/jpeg', 'image/png', 'image/webp'],
         'video' => ['video/mp4', 'video/webm'],
         'pdf' => ['application/pdf'],
     ],

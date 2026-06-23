@@ -71,6 +71,7 @@ final class Router
         ];
 
         $matchedRule = null;
+        $matchedRuleKey = null;
         foreach ($rateRules as $pattern => $rules) {
             $routeMethod = explode(' ', $pattern, 2)[0] ?? '';
             $routePath = explode(' ', $pattern, 2)[1] ?? '';
@@ -79,6 +80,7 @@ final class Router
             }
             if ($routePath !== '' && str_starts_with($path, $routePath)) {
                 $matchedRule = $rules;
+                $matchedRuleKey = $routeMethod . ' ' . $routePath;
                 break;
             }
         }
@@ -90,7 +92,7 @@ final class Router
         $serverVars = $_SERVER;
         foreach ($matchedRule as $rule) {
             $rateLimiter = new RateLimitMiddleware([
-                $method . ' ' . $path => $rule,
+                (string) $matchedRuleKey => $rule,
             ]);
             try {
                 $rateLimiter->handle($path, $method, $serverVars);

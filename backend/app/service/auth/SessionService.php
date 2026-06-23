@@ -185,37 +185,62 @@ final class SessionService
 
         $pdo = DatabaseManager::instance()->connection();
         if ($pdo instanceof PDO) {
-            $statement = $pdo->prepare(
-                'SELECT s.session_code, s.user_id, u.username, u.nickname, u.status
-                 FROM admin_login_sessions s
-                 JOIN admin_users u ON u.id = s.user_id
-                 WHERE s.session_code = :session_code
-                 AND s.refresh_token_hash = :token_hash
-                 AND s.revoked_at IS NULL
-                 AND s.expired_at > NOW()
-                 LIMIT 1'
-            );
-            $statement->execute([
-                'session_code' => $payload['session_code'] ?? '',
-                'token_hash' => hash('sha256', $refreshToken),
-            ]);
-            $session = $statement->fetch();
+            try {
+                $pdo->beginTransaction();
 
-            if (is_array($session) && (int) ($session['status'] ?? 0) === 1) {
+                $statement = $pdo->prepare(
+                    'SELECT s.session_code, s.user_id, u.username, u.nickname, u.status
+                     FROM admin_login_sessions s
+                     JOIN admin_users u ON u.id = s.user_id
+                     WHERE s.session_code = :session_code
+                       AND s.refresh_token_hash = :token_hash
+                       AND s.revoked_at IS NULL
+                       AND s.expired_at > NOW()
+                     LIMIT 1
+                     FOR UPDATE'
+                );
+                $statement->execute([
+                    'session_code' => (string) ($payload['session_code'] ?? ''),
+                    'token_hash' => hash('sha256', $refreshToken),
+                ]);
+                $session = $statement->fetch();
+
+                if (!is_array($session) || (int) ($session['status'] ?? 0) !== 1) {
+                    $pdo->rollBack();
+                    return null;
+                }
+
                 $revoke = $pdo->prepare(
                     'UPDATE admin_login_sessions
                      SET revoked_at = NOW()
-                     WHERE session_code = :session_code AND revoked_at IS NULL'
+                     WHERE session_code = :session_code
+                       AND refresh_token_hash = :token_hash
+                       AND revoked_at IS NULL
+                       AND expired_at > NOW()'
                 );
                 $revoke->execute([
                     'session_code' => (string) ($session['session_code'] ?? ''),
+                    'token_hash' => hash('sha256', $refreshToken),
                 ]);
+
+                if ($revoke->rowCount() !== 1) {
+                    $pdo->rollBack();
+                    return null;
+                }
+
+                $pdo->commit();
 
                 return $this->issueTokens([
                     'id' => (int) $session['user_id'],
                     'username' => (string) $session['username'],
                     'nickname' => (string) $session['nickname'],
                 ]);
+            } catch (\Throwable $exception) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+
+                return null;
             }
         }
 

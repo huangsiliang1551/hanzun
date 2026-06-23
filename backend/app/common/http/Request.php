@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace app\common\http;
 
+use app\common\exception\BusinessException;
+use app\enum\ErrorCode;
+
 final class Request
 {
     /**
@@ -45,6 +48,9 @@ final class Request
         if (str_contains($contentType, 'application/json') || str_contains($contentType, '+json') || str_contains($contentType, 'text/json')) {
             $rawBody = file_get_contents('php://input') ?: '';
             $decoded = json_decode($rawBody, true);
+            if ($rawBody !== '' && json_last_error() !== JSON_ERROR_NONE) {
+                throw new BusinessException('Malformed JSON request body.', ErrorCode::INVALID_PARAMS);
+            }
             if (is_array($decoded)) {
                 $body = $decoded;
             }

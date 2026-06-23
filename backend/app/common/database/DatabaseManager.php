@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
@@ -12,9 +12,7 @@ final class DatabaseManager
 {
     private static ?self $instance = null;
 
-    /**
-     * @var array<string, mixed>
-     */
+    /** @var array<string, mixed> */
     private array $config = [];
 
     private ?PDO $pdo = null;
@@ -32,9 +30,7 @@ final class DatabaseManager
         return self::$instance;
     }
 
-    /**
-     * @param array<string, mixed> $config
-     */
+    /** @param array<string, mixed> $config */
     public function configure(array $config): void
     {
         if ($this->initialConfigured) {
@@ -67,6 +63,7 @@ final class DatabaseManager
             return null;
         }
 
+        $allowFallback = $this->envBool('APP_ALLOW_RUNTIME_FALLBACK', false);
         $this->connectionAttempted = true;
 
         try {
@@ -86,14 +83,18 @@ final class DatabaseManager
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::ATTR_TIMEOUT => (int) ($this->config['connect_timeout'] ?? 1),
-                    PDO::ATTR_PERSISTENT => true,
+                    PDO::ATTR_PERSISTENT => $this->envBool('DB_PERSISTENT', false),
                 ]
             );
+
+            return $this->pdo;
         } catch (PDOException) {
+            if (!$allowFallback) {
+                return null;
+            }
+
             return null;
         }
-
-        return $this->pdo;
     }
 
     private function ensureConfigured(): void
@@ -106,5 +107,20 @@ final class DatabaseManager
         if (is_array($config) && !empty($config['hostname']) && !empty($config['database'])) {
             $this->config = $config;
         }
+    }
+
+    private function envBool(string $key, bool $default): bool
+    {
+        $value = getenv($key);
+        if (!is_string($value)) {
+            return $default;
+        }
+
+        $normalized = strtolower(trim($value));
+        if ($normalized === '') {
+            return $default;
+        }
+
+        return in_array($normalized, ['1', 'true', 'yes', 'on'], true);
     }
 }

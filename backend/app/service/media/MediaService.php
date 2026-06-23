@@ -174,11 +174,6 @@ final class MediaService
             throw new BusinessException('保存上传文件失败。', ErrorCode::UPLOAD_FAILED);
         }
 
-        // FIX-06: Sanitize SVG files to prevent XSS (remove script, iframe, on* events)
-        if ($extension === 'svg') {
-            $this->sanitizeSvgFile($targetPath);
-        }
-
         $imageMeta = null;
         if ($category === 'image') {
             $imageMeta = $this->optimizeImageForWeb($targetPath, $extension);
@@ -482,11 +477,6 @@ final class MediaService
             throw new BusinessException('保存上传文件失败。', ErrorCode::UPLOAD_FAILED);
         }
 
-        // FIX-06: Sanitize SVG files to prevent XSS (remove script, iframe, on* events)
-        if ($extension === 'svg') {
-            $this->sanitizeSvgFile($targetPath);
-        }
-
         $imageMeta = null;
         if ($category === 'image') {
             $imageMeta = $this->optimizeImageForWeb($targetPath, $extension);
@@ -662,8 +652,6 @@ final class MediaService
     private function detectMimeType(string $sourcePath, string $extension): string
     {
         $mimeType = function_exists('mime_content_type') ? mime_content_type($sourcePath) : null;
-        // Trust fileinfo only when it returns a specific type; fall back to extension
-        // matching for generic/octet-stream results (common with video/webm files).
         if (is_string($mimeType) && $mimeType !== '' && $mimeType !== 'application/octet-stream') {
             return $mimeType;
         }
@@ -672,7 +660,6 @@ final class MediaService
             'jpg', 'jpeg' => 'image/jpeg',
             'png' => 'image/png',
             'webp' => 'image/webp',
-            'svg' => 'image/svg+xml',
             'mp4' => 'video/mp4',
             'webm' => 'video/webm',
             'pdf' => 'application/pdf',
@@ -680,11 +667,19 @@ final class MediaService
         };
     }
 
-    private function validateSourcePath(string $sourcePath): string
+    private function resolveAllowedSourcePath(string $sourcePath): string
     {
         $sourcePath = trim($sourcePath);
         if ($sourcePath === '') {
             throw new BusinessException('缺少源文件路径。', ErrorCode::INVALID_PARAMS);
+        }
+
+        if (str_starts_with($sourcePath, 'http://') || str_starts_with($sourcePath, 'https://')) {
+            throw new BusinessException('文件路径不能是 URL。', ErrorCode::INVALID_PARAMS);
+        }
+
+        if (str_contains($sourcePath, '..')) {
+            throw new BusinessException('文件路径不合法。', ErrorCode::INVALID_PARAMS);
         }
 
         $realPath = realpath($sourcePath);
@@ -693,9 +688,8 @@ final class MediaService
         }
 
         $allowedRoots = array_filter([
-            realpath(base_path()),
-            realpath(sys_get_temp_dir()),
-            realpath(base_path('public/uploads')),
+            realpath(base_path('runtime/imports')),
+            realpath(base_path('public/uploads/tmp')),
         ]);
 
         foreach ($allowedRoots as $allowedRoot) {
@@ -721,10 +715,9 @@ final class MediaService
             return [$tempPath, $normalizedFileName, true];
         }
 
-        $sourcePath = $this->validateSourcePath((string) ($input['source_path'] ?? ''));
+        $sourcePath = $this->resolveAllowedSourcePath((string) ($input['source_path'] ?? ''));
         return [$sourcePath, basename($sourcePath), false];
     }
-
     private function normalizeUploadFileName(string $fileName): string
     {
         $fileName = trim($fileName);
@@ -745,9 +738,22 @@ final class MediaService
     private function createTempSourceFileFromBase64(string $fileName, string $inlineContent): string
     {
         $payload = $inlineContent;
-        if (str_contains($payload, ',')) {
-            $parts = explode(',', $payload, 2);
-            $payload = $parts[1];
+        if (preg_match('/^data:[^,]+;base64,(.+)$/i', $payload, $matches) === 1) {
+            $payload = $matches[1];
+        }
+
+        $payload = preg_replace('/\s+/', '', $payload);
+        if (!is_string($payload) || $payload === '') {
+            throw new BusinessException('文件内容无效。', ErrorCode::INVALID_PARAMS);
+        }
+
+        $estimatedSize = $this->estimateBase64DecodedSize($payload);
+        $maxImage = (int) config('upload.limits.image', 5 * 1024 * 1024);
+        $maxVideo = (int) config('upload.limits.video', 50 * 1024 * 1024);
+        $maxPdf = (int) config('upload.limits.pdf', 20 * 1024 * 1024);
+        $maxAllowed = max($maxImage, $maxVideo, $maxPdf);
+        if ($estimatedSize > 0 && $maxAllowed > 0 && $estimatedSize > $maxAllowed) {
+            throw new BusinessException('文件内容过大。', ErrorCode::FILE_TOO_LARGE);
         }
 
         $binaryContent = base64_decode($payload, true);
@@ -767,14 +773,13 @@ final class MediaService
             throw new BusinessException('创建临时上传文件失败。', ErrorCode::UPLOAD_FAILED);
         }
 
-        if (file_put_contents($targetTemporaryPath, $binaryContent) === false) {
+        if (file_put_contents($targetTemporaryPath, $binaryContent, LOCK_EX) === false) {
             @unlink($targetTemporaryPath);
             throw new BusinessException('写入临时上传文件失败。', ErrorCode::UPLOAD_FAILED);
         }
 
         return $targetTemporaryPath;
     }
-
     private function normalizeFolderName(string $folderName): string
     {
         $folderName = trim($folderName);
@@ -828,6 +833,22 @@ final class MediaService
     /**
      * @return array<string, array<int, string>>
      */
+    private function estimateBase64DecodedSize(string $base64): int
+    {
+        $base64 = preg_replace('/\s+/', '', $base64);
+        if (!is_string($base64)) {
+            return 0;
+        }
+
+        $length = strlen($base64);
+        if ($length === 0) {
+            return 0;
+        }
+
+        $padding = substr_count(substr($base64, -2), '=');
+
+        return (int) floor($length * 3 / 4) - $padding;
+    }
     private function allowedExtensionsByCategory(): array
     {
         $config = config('upload.allowed_extensions', []);
@@ -1069,7 +1090,7 @@ final class MediaService
         $extension = strtolower((string) ($item['file_ext'] ?? ''));
 
         return match ($extension) {
-            'jpg', 'jpeg', 'png', 'webp', 'svg' => 'image',
+            'jpg', 'jpeg', 'png', 'webp' => 'image',
             'mp4', 'webm' => 'video',
             'pdf' => 'pdf',
             default => 'other',
@@ -1308,48 +1329,44 @@ final class MediaService
     }
 
     /**
-     * Sanitize an SVG file by removing dangerous content (script, iframe, on* events, etc.).
-     * FIX-06: Prevent XSS via SVG upload.
+     * @return string|null
+     * absolute disk path to the asset file
      */
-    private function sanitizeSvgFile(string $filePath): void
-    {
-        $content = file_get_contents($filePath);
-        if ($content === false || $content === '') {
-            return;
-        }
-
-        // Remove script tags and their content
-        $content = preg_replace('/<script\b[^>]*>[\s\S]*?<\/script\s*>/i', '', $content) ?? $content;
-
-        // Remove iframe, object, embed tags and their content
-        $content = preg_replace('/<(iframe|object|embed|form|input|button|textarea|select|style|noscript|meta|link|base)\b[^>]*>[\s\S]*?<\/\1\s*>/i', '', $content) ?? $content;
-        $content = preg_replace('/<(iframe|object|embed|form|input|button|textarea|select|style|noscript|meta|link|base)\b[^>]*\/>/i', '', $content) ?? $content;
-
-        // Remove on* event handlers (onclick, onload, onerror, etc.)
-        $content = preg_replace('/\s+on\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $content) ?? $content;
-
-        // Remove javascript: and vbscript: URLs in href, xlink:href, src
-        $content = preg_replace('/\s+(href|xlink:href|src)\s*=\s*"(javascript|vbscript):[^"]*"/i', ' $1=""', $content) ?? $content;
-        $content = preg_replace('/\s+(href|xlink:href|src)\s*=\s*\'(javascript|vbscript):[^\']*\'/i', ' $1=""', $content) ?? $content;
-
-        file_put_contents($filePath, $content);
-    }
-
-    /** @return string|null absolute disk path to the asset file */
     private function resolveDiskPath(array $asset): ?string
     {
         $filePath = $asset['file_path'] ?? '';
-        if ($filePath === '') return null;
-        $disk = $asset['storage_disk'] ?? 'local';
-        if ($disk !== 'local') return null;
-        $root = rtrim(config('upload.root', 'public/uploads'), '/');
-        // file_path starts with /uploads/... or /assets/...
-        $relative = ltrim($filePath, '/');
-        $absolute = base_path($root . '/' . $relative);
-        if (str_starts_with($relative, 'assets/')) {
-            $absolute = base_path('public/' . $relative);
+        if ($filePath === '') {
+            return null;
         }
-        return $absolute;
+
+        $disk = $asset['storage_disk'] ?? 'local';
+        if ($disk !== 'local') {
+            return null;
+        }
+
+        $relative = ltrim((string) $filePath, '/');
+        if ($relative === '' || str_contains($relative, '..')) {
+            return null;
+        }
+
+        if (!str_starts_with($relative, 'uploads/') && !str_starts_with($relative, 'assets/')) {
+            return null;
+        }
+
+        $baseDir = realpath(base_path('public'));
+        if ($baseDir === false) {
+            return null;
+        }
+
+        $absolute = realpath(base_path('public/' . $relative));
+        if ($absolute === false) {
+            return null;
+        }
+
+        if ($absolute === $baseDir || str_starts_with($absolute, $baseDir . DIRECTORY_SEPARATOR)) {
+            return $absolute;
+        }
+
+        return null;
     }
 }
-

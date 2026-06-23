@@ -19,16 +19,25 @@ class AuthMiddleware
     {
         $authorization = $request->header('Authorization', '');
         if ($authorization === '') {
-            throw new BusinessException('登录状态已失效', ErrorCode::UNAUTHORIZED);
+            throw new BusinessException('登录会话已失效', ErrorCode::UNAUTHORIZED);
         }
 
-        $token = trim(str_ireplace('Bearer', '', $authorization));
+        $token = $this->parseBearerToken($authorization);
         $user = $this->sessionService->validateAccessToken($token);
         if ($user === null) {
-            throw new BusinessException('登录状态已失效', ErrorCode::UNAUTHORIZED);
+            throw new BusinessException('登录会话已失效', ErrorCode::UNAUTHORIZED);
         }
 
         RequestContext::setUser($user);
         return $next($request);
+    }
+
+    private function parseBearerToken(string $authorization): string
+    {
+        if (!preg_match('/^Bearer\s+(.+)$/i', trim($authorization), $matches)) {
+            throw new BusinessException('登录会话已失效', ErrorCode::UNAUTHORIZED);
+        }
+
+        return trim((string) $matches[1]);
     }
 }

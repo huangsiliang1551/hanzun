@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
@@ -8,7 +8,7 @@ use app\common\exception\BusinessException;
 
 final class RateLimitMiddleware
 {
-    private const STORAGE_DIR = '/runtime/storage/rate_limits/';
+    private const string STORAGE_DIR = '/runtime/storage/rate_limits';
 
     /**
      * @var array<string, array{window_seconds: int, max_requests: int}>
@@ -37,7 +37,12 @@ final class RateLimitMiddleware
         $clientIp = $this->resolveClientIp($server);
         $ruleKey = $matchedRule['key'];
 
-        $this->checkRateLimit($clientIp, $ruleKey, $matchedRule['window_seconds'], $matchedRule['max_requests']);
+        $this->checkRateLimit(
+            $clientIp,
+            $ruleKey,
+            $matchedRule['window_seconds'],
+            $matchedRule['max_requests']
+        );
     }
 
     /**
@@ -70,56 +75,102 @@ final class RateLimitMiddleware
      */
     private function resolveClientIp(array $server): string
     {
-        $candidates = [
-            $server['HTTP_X_FORWARDED_FOR'] ?? null,
-            $server['HTTP_X_REAL_IP'] ?? null,
-            $server['REMOTE_ADDR'] ?? '127.0.0.1',
-        ];
+        $remoteAddr = (string) ($server['REMOTE_ADDR'] ?? '');
+        $trustedProxies = $this->trustedProxies();
 
-        foreach ($candidates as $candidate) {
-            if (is_string($candidate) && $candidate !== '') {
-                $ip = trim(explode(',', $candidate)[0]);
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return $ip;
-                }
+        if ($remoteAddr !== '' && $this->isTrustedProxy($remoteAddr, $trustedProxies)) {
+            $forwardedFor = (string) ($server['HTTP_X_FORWARDED_FOR'] ?? '');
+            if ($forwardedFor !== '') {
+                return $this->firstIp($forwardedFor);
+            }
+
+            $realIp = (string) ($server['HTTP_X_REAL_IP'] ?? '');
+            if ($realIp !== '') {
+                return $this->normalizeIp($realIp);
             }
         }
 
-        return '127.0.0.1';
+        return $this->normalizeIp($remoteAddr);
+    }
+
+    /** @return string[] */
+    private function trustedProxies(): array
+    {
+        $raw = (string) getenv('TRUSTED_PROXIES');
+        $items = array_filter(array_map('trim', explode(',', $raw)));
+
+        return array_values($items);
+    }
+
+    private function isTrustedProxy(string $ip, array $trustedProxies): bool
+    {
+        return in_array($ip, $trustedProxies, true);
+    }
+
+    private function firstIp(string $value): string
+    {
+        $candidates = array_map('trim', explode(',', $value));
+
+        foreach ($candidates as $candidate) {
+            if ($candidate === '') {
+                continue;
+            }
+            $ip = $this->normalizeIp($candidate);
+            if ($ip !== '0.0.0.0') {
+                return $ip;
+            }
+        }
+
+        return '0.0.0.0';
+    }
+
+    private function normalizeIp(string $ip): string
+    {
+        $trimmed = trim($ip);
+        if ($trimmed === '') {
+            return '0.0.0.0';
+        }
+
+        if (filter_var($trimmed, FILTER_VALIDATE_IP)) {
+            return $trimmed;
+        }
+
+        return '0.0.0.0';
     }
 
     private function checkRateLimit(string $clientIp, string $ruleKey, int $windowSeconds, int $maxRequests): void
     {
         $storageDir = $this->getStorageDir();
         if (!is_dir($storageDir) && !mkdir($storageDir, 0777, true) && !is_dir($storageDir)) {
-            return; // Silently skip if storage not writable
+            return;
+        }
+
+        if ($clientIp === '0.0.0.0') {
+            return;
         }
 
         $storageKey = $ruleKey . '_' . str_replace(':', '_', $clientIp);
-        $storagePath = $storageDir . md5($storageKey) . '.json';
+        $storagePath = $storageDir . DIRECTORY_SEPARATOR . md5($storageKey) . '.json';
 
         $records = $this->readRecords($storagePath);
         $now = time();
 
-        // Remove expired entries
         $cutoff = $now - $windowSeconds;
         $records = array_values(array_filter($records, static fn (int $timestamp): bool => $timestamp > $cutoff));
 
-        // Check limit
         if (count($records) >= $maxRequests) {
             $oldest = min($records);
             $retryAfter = $windowSeconds - ($now - $oldest);
             throw new RateLimitExceededException($retryAfter > 0 ? $retryAfter : 1);
         }
 
-        // Record current request
         $records[] = $now;
         $this->writeRecords($storagePath, $records);
     }
 
     private function getStorageDir(): string
     {
-        return base_path(self::STORAGE_DIR);
+        return rtrim(base_path(self::STORAGE_DIR), DIRECTORY_SEPARATOR);
     }
 
     /**
@@ -154,7 +205,7 @@ class RateLimitExceededException extends BusinessException
 {
     public function __construct(int $retryAfter = 1)
     {
-        parent::__construct('请求过于频繁，请 ' . $retryAfter . ' 秒后重试', 429);
+        parent::__construct('Too many requests. Please try again in ' . $retryAfter . ' second(s).', 429);
         $this->retryAfter = $retryAfter;
     }
 

@@ -8,7 +8,10 @@ final class RuntimeStorage
 {
     public static function enabled(): bool
     {
-        $value = getenv('PREFER_RUNTIME_STORAGE');
+        $value = getenv('APP_ALLOW_RUNTIME_FALLBACK');
+        if ($value === false) {
+            $value = getenv('PREFER_RUNTIME_STORAGE');
+        }
         if (!is_string($value)) {
             return false;
         }

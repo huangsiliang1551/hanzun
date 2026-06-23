@@ -38,4 +38,10 @@ final class RequestContext
     {
         return self::$user;
     }
+
+    public static function clear(): void
+    {
+        self::$request = null;
+        self::$user = null;
+    }
 }
