@@ -7,7 +7,6 @@ on:
 jobs:
   admin-v2-build:
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('admin-v2/package.json') != '' }}
     defaults:
       run:
         working-directory: admin-v2
@@ -23,7 +22,6 @@ jobs:
 
   backend-php-check:
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('backend/composer.json') != '' }}
     defaults:
       run:
         working-directory: backend
