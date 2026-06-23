@@ -17,3 +17,8 @@ admin-v2/.vite/
 *.local
 .env
 logs/
+backend/vendor/
+backend/.env.production
+backend/.env.example
+.tmp-render-full.php
+.well-known/acme-challenge/
