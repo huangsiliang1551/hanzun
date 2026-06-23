@@ -1,0 +1,24 @@
+{
+  "name": "hanzun-admin-v2",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"if (Test-Path ../admin-app) { Remove-Item -LiteralPath ../admin-app -Recurse -Force }\" && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.6.1",
+    "antd": "^5.27.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.1",
+    "suneditor": "^2.47.8",
+    "suneditor-react": "^3.6.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11"
+  }
+}

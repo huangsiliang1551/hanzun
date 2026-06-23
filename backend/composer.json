@@ -1,0 +1,18 @@
+{
+  "name": "hanzun/cms-backend",
+  "description": "涵尊实业 CMS 后端工程骨架（ThinkPHP 8 风格）",
+  "type": "project",
+  "require": {
+    "php": "^8.1",
+    "topthink/framework": "^8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "app\\": "app/"
+    }
+  },
+  "scripts": {
+    "post-install-cmd": [],
+    "post-update-cmd": []
+  }
+}

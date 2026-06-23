@@ -1,0 +1,311 @@
+<?php
+
+declare(strict_types=1);
+
+namespace app\service\system;
+
+use app\repository\LanguageRepository;
+use app\repository\SiteBuildRepository;
+use app\service\StaticPublisher;
+
+final class SiteBuildService
+{
+    public function __construct(
+        private readonly SiteBuildRepository $siteBuildRepository = new SiteBuildRepository(),
+        private readonly LanguageRepository $languageRepository = new LanguageRepository()
+    ) {
+    }
+
+    public function overview(): array
+    {
+        $this->recoverStaleJobs();
+        $this->kickQueuedJobs();
+
+        return [
+            'current' => $this->siteBuildRepository->currentJob(),
+            'summary' => $this->siteBuildRepository->summary(),
+            'items' => $this->siteBuildRepository->jobs(50),
+        ];
+    }
+
+    public function jobs(): array
+    {
+        $this->recoverStaleJobs();
+        $this->kickQueuedJobs();
+
+        return [
+            'items' => $this->siteBuildRepository->jobs(100),
+            'summary' => $this->siteBuildRepository->summary(),
+            'current' => $this->siteBuildRepository->currentJob(),
+        ];
+    }
+
+    public function current(): array
+    {
+        $this->recoverStaleJobs();
+        $this->kickQueuedJobs();
+
+        return [
+            'job' => $this->siteBuildRepository->currentJob(),
+        ];
+    }
+
+    public function detail(int $id): array
+    {
+        $this->recoverStaleJobs();
+        $this->kickQueuedJobs();
+
+        $job = $this->siteBuildRepository->findJob($id);
+
+        return [
+            'job' => $job,
+            'items' => $job !== null ? $this->siteBuildRepository->listJobItems($id) : [],
+        ];
+    }
+
+    public function createJob(array $input, ?array $operator = null): array
+    {
+        $scope = $this->normalizeScope((string) ($input['scope'] ?? 'incremental'));
+        $triggerSource = trim((string) ($input['trigger_source'] ?? ($scope === 'full' ? 'manual_full_rebuild' : 'manual_incremental')));
+        $entityType = trim((string) ($input['entity_type'] ?? ''));
+        $entityId = (int) ($input['entity_id'] ?? 0);
+        $languageCodes = $this->resolveLanguageCodes($input['language_codes'] ?? []);
+        $context = is_array($input['context'] ?? null) ? $input['context'] : [];
+
+        $publisher = new StaticPublisher();
+        $plan = $publisher->planJob([
+            'scope' => $scope,
+            'trigger_source' => $triggerSource,
+            'entity_type' => $entityType !== '' ? $entityType : null,
+            'entity_id' => $entityId,
+            'language_codes' => $languageCodes,
+            'context' => $context,
+        ]);
+
+        $job = $this->siteBuildRepository->createJob([
+            'scope' => $scope,
+            'trigger_source' => $triggerSource,
+            'entity_type' => $entityType !== '' ? $entityType : null,
+            'entity_id' => $entityId,
+            'language_codes' => $languageCodes,
+            'context' => $context,
+            'status' => 'queued',
+            'total_steps' => (int) ($plan['total_steps'] ?? 0),
+            'completed_steps' => 0,
+            'progress_percent' => 0,
+            'current_step' => 'collect_pages',
+            'error_message' => null,
+            'output_summary' => [
+                'planned_routes' => (int) ($plan['total_steps'] ?? 0),
+                'queued_at' => date('Y-m-d H:i:s'),
+            ],
+            'created_by' => (string) ($operator['nickname'] ?? $operator['username'] ?? 'system'),
+        ], is_array($plan['items'] ?? null) ? $plan['items'] : []);
+
+        $this->dispatchAsync((int) ($job['id'] ?? 0));
+
+        return [
+            'job' => $job,
+        ];
+    }
+
+    public function retry(int $id, ?array $operator = null): array
+    {
+        $existing = $this->siteBuildRepository->findJob($id);
+        if ($existing === null) {
+            return ['job' => null];
+        }
+
+        $publisher = new StaticPublisher();
+        $plan = $publisher->planJob($existing);
+
+        $job = $this->siteBuildRepository->updateJob($id, [
+            'status' => 'queued',
+            'total_steps' => (int) ($plan['total_steps'] ?? 0),
+            'completed_steps' => 0,
+            'progress_percent' => 0,
+            'current_step' => 'collect_pages',
+            'error_message' => null,
+            'output_summary' => [
+                'retry_by' => (string) ($operator['nickname'] ?? $operator['username'] ?? 'system'),
+                'planned_routes' => (int) ($plan['total_steps'] ?? 0),
+                'queued_at' => date('Y-m-d H:i:s'),
+            ],
+            'started_at' => null,
+            'finished_at' => null,
+        ]);
+        $this->siteBuildRepository->replaceJobItems($id, is_array($plan['items'] ?? null) ? $plan['items'] : []);
+        $this->dispatchAsync($id);
+
+        return [
+            'job' => $job,
+        ];
+    }
+
+    public function queueFullBuild(string $triggerSource, array $context = [], ?array $operator = null): array
+    {
+        return $this->createJob([
+            'scope' => 'full',
+            'trigger_source' => $triggerSource,
+            'language_codes' => $context['language_codes'] ?? [],
+            'context' => $context,
+        ], $operator);
+    }
+
+    public function queueIncrementalBuild(string $triggerSource, string $entityType, int $entityId, array $context = [], ?array $operator = null): array
+    {
+        return $this->createJob([
+            'scope' => 'incremental',
+            'trigger_source' => $triggerSource,
+            'entity_type' => $entityType,
+            'entity_id' => $entityId,
+            'language_codes' => $context['language_codes'] ?? [],
+            'context' => $context,
+        ], $operator);
+    }
+
+    public function runJob(int $jobId): array
+    {
+        $this->recoverStaleJobs();
+        $job = $this->siteBuildRepository->findJob($jobId);
+        if ($job === null) {
+            return ['job' => null];
+        }
+
+        $running = $this->siteBuildRepository->currentJob();
+        if ($running !== null && (int) ($running['id'] ?? 0) !== $jobId && (string) ($running['status'] ?? '') === 'running') {
+            return ['job' => $job];
+        }
+
+        $publisher = new StaticPublisher();
+
+        return $publisher->executeJob($jobId);
+    }
+
+    private function normalizeScope(string $scope): string
+    {
+        $scope = strtolower(trim($scope));
+
+        return $scope === 'full' ? 'full' : 'incremental';
+    }
+
+    private function resolveLanguageCodes(array|string $requested): array
+    {
+        $rawCodes = is_array($requested) ? $requested : explode(',', (string) $requested);
+        $codes = [];
+        foreach ($rawCodes as $item) {
+            $code = strtolower(trim((string) $item));
+            if ($code !== '') {
+                $codes[] = $code;
+            }
+        }
+
+        $codes = array_values(array_unique($codes));
+        if ($codes !== []) {
+            return $codes;
+        }
+
+        $enabled = [];
+        foreach ($this->languageRepository->list() as $language) {
+            if ((int) ($language['is_enabled'] ?? 0) !== 1) {
+                continue;
+            }
+            $code = strtolower(trim((string) ($language['code'] ?? '')));
+            if ($code !== '') {
+                $enabled[] = $code;
+            }
+        }
+
+        return $enabled !== [] ? array_values(array_unique($enabled)) : ['zh'];
+    }
+
+    private function kickQueuedJobs(): void
+    {
+        $this->recoverStaleJobs();
+        $current = $this->siteBuildRepository->currentJob();
+        if ($current !== null && (string) ($current['status'] ?? '') === 'running') {
+            return;
+        }
+
+        foreach ($this->siteBuildRepository->jobs(20) as $job) {
+            if ((string) ($job['status'] ?? '') !== 'queued') {
+                continue;
+            }
+
+            $this->dispatchAsync((int) ($job['id'] ?? 0));
+            return;
+        }
+    }
+
+    private function recoverStaleJobs(): void
+    {
+        $runningTimeoutSeconds = max(300, (int) env('SITE_BUILD_RUNNING_TIMEOUT', '1800'));
+        $queuedTimeoutSeconds = max(60, (int) env('SITE_BUILD_QUEUED_TIMEOUT', '180'));
+        $now = time();
+
+        foreach ($this->siteBuildRepository->jobs(50) as $job) {
+            $status = (string) ($job['status'] ?? '');
+            if (!in_array($status, ['queued', 'running'], true)) {
+                continue;
+            }
+
+            $timedAt = $status === 'running'
+                ? strtotime((string) ($job['started_at'] ?? ''))
+                : strtotime((string) (($job['output_summary']['queued_at'] ?? $job['created_at'] ?? '')));
+            $timeoutSeconds = $status === 'running' ? $runningTimeoutSeconds : $queuedTimeoutSeconds;
+
+            if ($timedAt <= 0 || ($now - $timedAt) < $timeoutSeconds) {
+                continue;
+            }
+
+            $message = trim((string) ($job['error_message'] ?? ''));
+            $suffix = $status === 'running'
+                ? 'site build job timed out and was marked failed automatically'
+                : 'site build job timed out while queued and was marked failed automatically';
+            if ($message === '') {
+                $message = $suffix;
+            } elseif (!str_contains($message, $suffix)) {
+                $message .= ' | ' . $suffix;
+            }
+
+            $this->siteBuildRepository->updateJob((int) ($job['id'] ?? 0), [
+                'status' => 'failed',
+                'current_step' => 'failed',
+                'error_message' => $message,
+                'finished_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+    }
+
+    private function dispatchAsync(int $jobId): void
+    {
+        if ($jobId <= 0) {
+            return;
+        }
+
+        if ((string) env('SITE_BUILD_ASYNC_DISABLED', '0') === '1') {
+            return;
+        }
+
+        $script = dirname(__DIR__, 3) . '/scripts/site_build_job.php';
+        if (!is_file($script)) {
+            $this->siteBuildRepository->updateJob($jobId, [
+                'status' => 'failed',
+                'current_step' => 'failed',
+                'error_message' => 'site build worker script missing: ' . $script,
+                'finished_at' => date('Y-m-d H:i:s'),
+            ]);
+            return;
+        }
+
+        $phpBinary = defined('PHP_BINARY') ? PHP_BINARY : 'php';
+        $command = escapeshellarg($phpBinary) . ' ' . escapeshellarg($script) . ' --job=' . $jobId;
+
+        if (DIRECTORY_SEPARATOR === '\\') {
+            @pclose(@popen('start /B "" ' . $command, 'r'));
+            return;
+        }
+
+        @exec($command . ' > /dev/null 2>&1 &');
+    }
+}
