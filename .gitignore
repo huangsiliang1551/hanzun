@@ -1,24 +1,73 @@
-node_modules/
-admin-v2/node_modules/
-admin-app/node_modules/
-.vscode/
-.idea/
+# OS / editor / temp
 .DS_Store
 Thumbs.db
-*.log
+.idea/
+.vscode/
+*.swp
+*.swo
 *.tmp
-.npm
-.npmrc
+*.tmp-*
+*.local
+tmp/
+temp/
+
+# logs / runtime
+*.log
+logs/
 coverage/
 dist/
 build/
 admin-v2/dist/
 admin-v2/.vite/
-*.local
+backend/runtime/
+runtime/
+
+# environment files (keep examples)
 .env
-logs/
-backend/vendor/
+*.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
 backend/.env.production
-backend/.env.example
-.tmp-render-full.php
+admin-v2/.env
+admin-v2/.env.*
+!admin-v2/.env.example
+
+# dependencies / cache
+node_modules/
+admin-v2/node_modules/
+admin-app/node_modules/
+vendor/
+backend/vendor/
+
+# generated / sensitive artifacts
+uploads/
+backend/public/uploads/
+!uploads/.gitkeep
+!backend/public/uploads/.gitkeep
+*.sql
+*.dump
+*.sqlite
+*.sqlite3
+*.lock
+*.key
+*.pem
+*.crt
+*.p12
+*.conf
+*.ini
+*.log
+*.bak
+*.backup
+*.old
+
+# server / deploy helpers
+.npm
+.npmrc
 .well-known/acme-challenge/
+.tmp-render-full.php
+
+# audits
+.audit/

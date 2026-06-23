@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
@@ -11,6 +11,11 @@ use app\service\inquiry\InquiryService;
 
 final class ContentController extends BasePublicController
 {
+    private const int MAX_NAME_LENGTH = 80;
+    private const int MAX_PHONE_LENGTH = 40;
+    private const int MAX_EMAIL_LENGTH = 120;
+    private const int MAX_MESSAGE_LENGTH = 2000;
+
     public function __construct(private readonly PublicSiteService $publicSiteService = new PublicSiteService())
     {
     }
@@ -179,29 +184,26 @@ final class ContentController extends BasePublicController
 
     public function lead(Request $request): array
     {
-        // FIX-25: Honeypot anti-spam — if the hidden field is filled, it's a bot
         $honeypot = trim((string) $request->input('_website', ''));
-        if ($honeypot !== '') {
-            // Silently accept but don't process (bot ignored)
+        $legacyHoneypot = trim((string) $request->input('company_website', ''));
+
+        if ($honeypot !== '' || $legacyHoneypot !== '') {
             return $this->success(['id' => 0, 'silent' => true]);
         }
-
-        // Rate limiting on lead form is already handled by Router
 
         $inquiryService = new InquiryService();
 
         $data = Sanitizer::sanitizeArray([
-            'name' => $request->input('name', ''),
-            'phone' => $request->input('phone', ''),
-            'email' => $request->input('email', ''),
-            'message' => $request->input('message', ''),
+            'name' => $this->normalizeLeadValue((string) $request->input('name', ''), self::MAX_NAME_LENGTH),
+            'phone' => $this->normalizeLeadValue((string) $request->input('phone', ''), self::MAX_PHONE_LENGTH),
+            'email' => $this->normalizeLeadValue((string) $request->input('email', ''), self::MAX_EMAIL_LENGTH),
+            'message' => $this->normalizeLeadValue((string) $request->input('message', ''), self::MAX_MESSAGE_LENGTH),
         ]);
 
         $result = $inquiryService->createFromLeadForm($data);
 
         return $this->success($result);
     }
-
     public function pageview(Request $request): array
     {
         $entityType = trim((string) $request->input('entity_type', ''));
@@ -255,6 +257,19 @@ final class ContentController extends BasePublicController
     /**
      * @return array<string, mixed>
      */
+    private function normalizeLeadValue(string $value, int $maxLength): string
+    {
+        $normalized = trim($value);
+
+        if ($maxLength <= 0) {
+            return $normalized;
+        }
+
+        return mb_strlen($normalized, 'UTF-8') > $maxLength
+            ? mb_substr($normalized, 0, $maxLength, 'UTF-8')
+            : $normalized;
+    }
+
     private function resolveLanguage(Request $request): array
     {
         return $this->publicSiteService->resolveLanguage(

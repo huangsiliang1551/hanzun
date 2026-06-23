@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"if (Test-Path ../admin-app) { Remove-Item -LiteralPath ../admin-app -Recurse -Force }\" && vite build",
+    "build": "node scripts/clean-admin-output.mjs && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

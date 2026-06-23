@@ -9,6 +9,11 @@ import { shouldDispatchAuthExpiredEvent } from '@/utils/authExpiredPolicy';
 const DEFAULT_TIMEOUT = 20000;
 const DEFAULT_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 let refreshPromise = null;
+const TIMEOUT_MESSAGE = 'Request timed out. Please try again.';
+const NETWORK_OFFLINE_MESSAGE = 'Network is offline. Please check your connection.';
+const TOO_MANY_REQUESTS_MESSAGE = 'Too many requests. Please try again later.';
+const SERVER_ERROR_MESSAGE = 'Server error. Please try again later.';
+const SERVER_AUTH_MESSAGE = 'Authentication required. Please log in again.';
 
 function dispatchAuthExpiredEvent() {
   if (typeof window === 'undefined' || typeof CustomEvent === 'undefined') {
@@ -80,6 +85,42 @@ function createHttpError(response, payload) {
   error.status = response.status;
   error.payload = payload;
   return error;
+}
+
+function normalizeApiError(error, response, payload) {
+  if (error?.name === 'AbortError') {
+    return new Error(TIMEOUT_MESSAGE);
+  }
+
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return new Error(NETWORK_OFFLINE_MESSAGE);
+  }
+
+  if (response?.status === 401) {
+    return new Error(SERVER_AUTH_MESSAGE);
+  }
+
+  if (response?.status === 429) {
+    return new Error(TOO_MANY_REQUESTS_MESSAGE);
+  }
+
+  if (response?.status >= 500) {
+    return new Error(SERVER_ERROR_MESSAGE);
+  }
+
+  if (payload && typeof payload === 'object' && payload.message) {
+    return new Error(payload.message);
+  }
+
+  if (typeof payload === 'string' && payload.trim()) {
+    return new Error(payload);
+  }
+
+  if (error instanceof Error) {
+    return error;
+  }
+
+  return new Error('Request failed.');
 }
 
 async function refreshAuthSession() {
@@ -183,7 +224,7 @@ export async function request(path, options = {}) {
           dispatchAuthExpiredEvent();
         }
       }
-      throw createHttpError(response, payload);
+      throw normalizeApiError(createHttpError(response, payload), response, payload);
     }
 
     if (responseType === 'text') {
@@ -201,17 +242,17 @@ export async function request(path, options = {}) {
             });
           } catch {
             clearAuthSession();
-            if (shouldDispatchAuthExpiredEvent({ skipAuth, suppressAuthExpiredEvent })) {
-              dispatchAuthExpiredEvent();
+              if (shouldDispatchAuthExpiredEvent({ skipAuth, suppressAuthExpiredEvent })) {
+                dispatchAuthExpiredEvent();
+              }
             }
           }
-        }
 
-        const error = new Error(payload.message || 'Request failed');
-        error.code = payload.code;
-        error.payload = payload;
-        throw error;
-      }
+          const error = new Error(payload.message || 'Request failed');
+          error.code = payload.code;
+          error.payload = payload;
+          throw normalizeApiError(error, response, payload);
+        }
 
       const data = payload.data !== undefined ? payload.data : payload;
       if (data && typeof data === 'object' && data.generation_job) {
@@ -231,13 +272,7 @@ export async function request(path, options = {}) {
 
     return payload;
   } catch (error) {
-    if (error?.name === 'AbortError') {
-      const timeoutError = new Error('Request timed out, please try again.');
-      timeoutError.name = 'AbortError';
-      throw timeoutError;
-    }
-
-    throw error;
+    throw normalizeApiError(error);
   } finally {
     if (typeof window !== 'undefined' && timer) {
       window.clearTimeout(timer);

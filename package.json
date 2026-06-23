@@ -1,4 +1,15 @@
 {
+  "name": "hanzun-site",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:site": "live-server --port=5173 --open=/zh/index.html",
+    "dev:admin": "npm --prefix admin-v2 run dev",
+    "build:admin": "npm --prefix admin-v2 run build",
+    "check:admin": "npm --prefix admin-v2 run build",
+    "check:php": "cd backend && composer validate --strict",
+    "check": "npm run build:admin && npm run check:php"
+  },
   "dependencies": {
     "live-server": "^1.2.2"
   }

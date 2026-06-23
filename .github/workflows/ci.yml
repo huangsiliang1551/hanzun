@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  admin-v2-build:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('admin-v2/package.json') != '' }}
+    defaults:
+      run:
+        working-directory: admin-v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: admin-v2/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  backend-php-check:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('backend/composer.json') != '' }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+      - run: composer validate --strict
+      - run: composer install --no-interaction --no-progress --prefer-dist
+      - run: find app config route public -name "*.php" -print0 2>/dev/null | xargs -0 -n1 php -l

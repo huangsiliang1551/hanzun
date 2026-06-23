@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
@@ -13,6 +13,11 @@ use app\service\log\OperationLogService;
 
 final class InquiryService
 {
+    private const int MAX_NAME_LENGTH = 80;
+    private const int MAX_PHONE_LENGTH = 40;
+    private const int MAX_EMAIL_LENGTH = 120;
+    private const int MAX_MESSAGE_LENGTH = 2000;
+
     public function __construct(
         private readonly InquiryRepository $inquiryRepository = new InquiryRepository(),
         private readonly ConversationRepository $conversationRepository = new ConversationRepository(),
@@ -92,16 +97,24 @@ final class InquiryService
 
     public function createFromLeadForm(array $input): array
     {
-        $name = trim((string) ($input['name'] ?? ''));
-        $email = trim((string) ($input['email'] ?? ''));
-        $phone = trim((string) ($input['phone'] ?? ''));
-        $message = trim((string) ($input['message'] ?? ''));
+        $name = $this->normalizeLeadField((string) ($input['name'] ?? ''), self::MAX_NAME_LENGTH);
+        $email = $this->normalizeLeadField((string) ($input['email'] ?? ''), self::MAX_EMAIL_LENGTH);
+        $phone = $this->normalizeLeadField((string) ($input['phone'] ?? ''), self::MAX_PHONE_LENGTH);
+        $message = $this->normalizeLeadField((string) ($input['message'] ?? ''), self::MAX_MESSAGE_LENGTH);
 
         if ($name === '') {
-            throw new BusinessException('请填写姓名', ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('Name is required.', ErrorCode::INVALID_PARAMS);
         }
         if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new BusinessException('请填写有效的邮箱地址', ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('璇峰～鍐欐湁鏁堢殑閭鍦板潃', ErrorCode::INVALID_PARAMS);
+        }
+
+        if (mb_strlen($message) > self::MAX_MESSAGE_LENGTH) {
+            throw new BusinessException('Message is too long.', ErrorCode::INVALID_PARAMS);
+        }
+
+        if ($phone !== '' && mb_strlen($phone) > self::MAX_PHONE_LENGTH) {
+            throw new BusinessException('Phone number is too long.', ErrorCode::INVALID_PARAMS);
         }
 
         $primaryContactType = 'email';
@@ -113,7 +126,7 @@ final class InquiryService
 
         $requirement = $message !== ''
             ? $message
-            : sprintf('来自联系表单的询盘：姓名 %s，邮箱 %s', $name, $email);
+            : sprintf('Lead submitted from %s (%s)', $name, $email);
 
         $record = $this->inquiryRepository->createInquiry([
             'source' => 'lead_form',
@@ -141,6 +154,19 @@ final class InquiryService
             'status' => (string) ($record['status'] ?? 'new'),
             'created_at' => (string) ($record['created_at'] ?? ''),
         ];
+    }
+
+    private function normalizeLeadField(string $value, int $maxLength): string
+    {
+        $normalized = trim($value);
+
+        if ($maxLength <= 0) {
+            return $normalized;
+        }
+
+        return mb_strlen($normalized, 'UTF-8') > $maxLength
+            ? mb_substr($normalized, 0, $maxLength, 'UTF-8')
+            : $normalized;
     }
 
     public function detail(int $id): array

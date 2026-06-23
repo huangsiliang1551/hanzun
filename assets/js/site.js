@@ -2,59 +2,144 @@ const toggle = document.querySelector('[data-menu-toggle]');
 const nav = document.querySelector('[data-menu]');
 
 if (toggle && nav) {
+    const setMenuOpen = (open) => {
+        nav.classList.toggle('open', open);
+        toggle.setAttribute('aria-expanded', String(open));
+    };
+
+    const isOpen = () => nav.classList.contains('open');
+
+    setMenuOpen(isOpen());
+
     toggle.addEventListener('click', () => {
-        nav.classList.toggle('open');
+        setMenuOpen(!isOpen());
     });
+
     toggle.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            nav.classList.toggle('open');
+            setMenuOpen(!isOpen());
+        }
+
+        if (e.key === 'Escape') {
+            setMenuOpen(false);
+        }
+    });
+
+    nav.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            setMenuOpen(false);
         }
     });
 }
 
+function safeStorageGet(storage, key) {
+    try {
+        return storage?.getItem?.(key) || '';
+    } catch (error) {
+        return '';
+    }
+}
+
+function safeStorageSet(storage, key, value) {
+    try {
+        storage?.setItem?.(key, value);
+    } catch (error) {
+        return;
+    }
+}
+
+function safeStorageRemove(storage, key) {
+    try {
+        storage?.removeItem?.(key);
+    } catch (error) {
+        return;
+    }
+}
+
+function safeSessionStorageProbe() {
+    try {
+        if (!window.sessionStorage) {
+            return false;
+        }
+        const probeKey = '__hanzun_session_probe__';
+        window.sessionStorage.setItem(probeKey, '1');
+        window.sessionStorage.removeItem(probeKey);
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
 function trackVisit() {
+    if (!window.fetch) {
+        return;
+    }
+
     const storageKey = 'hanzun-client-id';
     const sessionStorageKey = 'hanzun-support-session';
-    let clientId = localStorage.getItem(storageKey);
+    let clientId = safeStorageGet(window.localStorage, storageKey);
 
     if (!clientId) {
         clientId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-        localStorage.setItem(storageKey, clientId);
+        safeStorageSet(window.localStorage, storageKey, clientId);
     }
 
     let supportSessionCode = '';
-    try {
-        supportSessionCode = window.sessionStorage?.getItem(sessionStorageKey) || '';
-        window.localStorage?.removeItem(sessionStorageKey);
-    } catch (error) {
-        supportSessionCode = '';
+    if (safeSessionStorageProbe()) {
+        supportSessionCode = safeStorageGet(window.sessionStorage, sessionStorageKey);
     }
 
-    fetch('/api/visitor-events', {
+    const payload = {
+        client_id: clientId,
+        session_code: supportSessionCode,
+        path: `${window.location.pathname}${window.location.search}`,
+        title: document.title,
+        referrer: document.referrer,
+        language: document.documentElement.lang || document.body?.dataset?.lang || 'en',
+    };
+
+    const request = {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            client_id: clientId,
-            session_code: supportSessionCode,
-            path: window.location.pathname + window.location.search,
-            title: document.title,
-            referrer: document.referrer,
-            language: document.documentElement.lang || document.body?.dataset?.lang || 'en',
-        }),
+        body: JSON.stringify(payload),
         keepalive: true,
-    }).then(async (response) => {
-        const result = await response.json().catch(() => null);
-        if (result && result.data && result.data.session_code) {
-            try {
-                window.sessionStorage?.setItem(sessionStorageKey, result.data.session_code);
-            } catch (error) {
-                return;
-            }
+    };
+
+    fetch('/api/visitor-events', request).then(async (response) => {
+        if (!response || !response.ok) {
+            return;
         }
-    }).catch(() => {});
+
+        const result = await response.json().catch(() => null);
+        const nextSessionCode = result?.data?.session_code;
+
+        if (!nextSessionCode) {
+            return;
+        }
+
+        safeStorageSet(
+            window.sessionStorage,
+            sessionStorageKey,
+            String(nextSessionCode)
+        );
+    }).catch(() => {
+        // best effort only
+    });
+
+    try {
+        safeStorageRemove(window.localStorage, 'hanzun-support-session');
+    } catch (error) {
+        return;
+    }
 }
 
-trackVisit();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        trackVisit();
+    }, { once: true });
+} else {
+    trackVisit();
+}
