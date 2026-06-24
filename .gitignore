@@ -71,3 +71,10 @@ backend/public/uploads/
 
 # audits
 .audit/
+
+# runtime artifacts (explicit)
+*.token
+backend/runtime/*.json
+backend/runtime/*.php
+php-server.err.log
+php-server\.err\.log*
