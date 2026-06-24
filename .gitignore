@@ -76,5 +76,4 @@ backend/public/uploads/
 *.token
 backend/runtime/*.json
 backend/runtime/*.php
-php-server.err.log
-php-server\.err\.log*
+php-server.err.log*
