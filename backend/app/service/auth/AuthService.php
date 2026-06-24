@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace app\service\auth;
 
 use app\common\auth\BearerToken;
+use app\common\http\ClientIp;
 use app\common\exception\BusinessException;
 use app\enum\ErrorCode;
 use app\repository\AdminUserRepository;
@@ -222,14 +223,7 @@ final class AuthService
 
     private function requestIp(): string
     {
-        $ip = (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['HTTP_X_REAL_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '');
-        if (str_contains($ip, ',')) {
-            $ip = trim((string) explode(',', $ip)[0]);
-        } else {
-            $ip = trim($ip);
-        }
-
-        return $ip === '' ? '127.0.0.1' : $ip;
+        return ClientIp::resolve();
     }
 
 }
