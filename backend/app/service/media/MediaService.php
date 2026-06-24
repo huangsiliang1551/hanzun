@@ -27,7 +27,7 @@ final class MediaService
     {
         $allowed = config('upload.mime_types.' . $category, []);
         if (!in_array($mimeType, $allowed, true)) {
-            throw new BusinessException('婵炲濮撮幊搴ㄥ储閹寸姵濯奸梻鈧幇顔炬啰婵炵鍋愭慨鏉懨瑰鈧幃褔宕堕妷銏犱壕濞达絿鐡斿鎺懳涢悧鍫濈仸闁?PDF 闂佸搫鍊稿ú锝呪枎閵忋倕违?, ErrorCode::UNSUPPORTED_FILE_TYPE);
+            throw new BusinessException('Unsupported file type.', ErrorCode::UNSUPPORTED_FILE_TYPE);
         }
     }
 
@@ -101,7 +101,7 @@ final class MediaService
     {
         $record = $this->mediaRepository->find($id);
         if ($record === null) {
-            throw new BusinessException('闁荤姍鍐仾缂侇煈鍠楃粙澶婎吋閸涱垱鎲奸梺闈╄礋閸斿﹪鍩€?, ErrorCode::NOT_FOUND);
+            throw new BusinessException('Asset not found.', ErrorCode::NOT_FOUND);
         }
 
         return $record;
@@ -111,8 +111,8 @@ final class MediaService
     {
         [$sourcePath, $originalFileName, $isTemporaryFile] = $this->resolveSourceFile($input);
         $folderName = $this->normalizeFolderName((string) ($input['folder_name'] ?? 'misc'));
-        $altText = $this->normalizeText((string) ($input['alt_text_zh'] ?? ''), 120, '闂佸搫娲ら妵姗€宕鍕闁搞儯鍔嶉幏?);
-        $description = $this->normalizeText((string) ($input['description_zh'] ?? ''), 500, '闂佺顕х换妤呭醇?);
+        $altText = $this->normalizeText((string) ($input['alt_text_zh'] ?? ''), 120, 'Alt text');
+        $description = $this->normalizeText((string) ($input['description_zh'] ?? ''), 500, 'Description');
         $status = $this->normalizeStatus($input['status'] ?? 1);
 
         try {
@@ -135,7 +135,7 @@ final class MediaService
         $tmpPath = $file['tmp_name'] ?? '';
 
         if ($originalFileName === '' || $tmpPath === '' || !is_file($tmpPath)) {
-            throw new BusinessException('婵炴垶鎸搁敃锝囨閸洖妫橀柛銉檮椤愪粙鏌￠崘顏勑ｉ柡鍛劦閺佸秴鐣濋崘鎯ф闂備焦褰冪粔鐢稿蓟婵犲洦鐒诲璺侯儏椤忋儵鏌￠崒姘煑婵炲棎鍨芥俊?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('Uploaded file is invalid.', ErrorCode::INVALID_PARAMS);
         }
 
         $folderId = (int) ($options['folder_id'] ?? 0);
@@ -143,8 +143,8 @@ final class MediaService
             $folderId,
             (string) ($options['folder_name'] ?? 'misc')
         );
-        $altText = $this->normalizeText((string) ($options['alt_text_zh'] ?? ''), 120, '闂佸搫娲ら妵姗€宕鍕闁搞儯鍔嶉幏?);
-        $description = $this->normalizeText((string) ($options['description_zh'] ?? ''), 500, '闂佺顕х换妤呭醇?);
+        $altText = $this->normalizeText((string) ($options['alt_text_zh'] ?? ''), 120, 'Alt text');
+        $description = $this->normalizeText((string) ($options['description_zh'] ?? ''), 500, 'Description');
 
         $category = $this->categoryFromFileName($originalFileName);
         $extension = $this->extractExtension($originalFileName);
@@ -166,12 +166,12 @@ final class MediaService
 
         $targetDirectory = base_path('public/uploads/' . $subDir);
         if (!is_dir($targetDirectory) && !mkdir($targetDirectory, 0777, true) && !is_dir($targetDirectory)) {
-            throw new BusinessException('闂佸憡甯楃粙鎴犵磽閹惧鈻斿┑鐘辫兌閻愬﹪鏌ｉ埡濠傛灈缂傚秴绉靛鍕綇椤愩儛鏇㈡煏?, ErrorCode::UPLOAD_FAILED);
+            throw new BusinessException('Failed to create upload directory.', ErrorCode::UPLOAD_FAILED);
         }
 
         $targetPath = $targetDirectory . DIRECTORY_SEPARATOR . $targetFileName;
         if (!move_uploaded_file($tmpPath, $targetPath)) {
-            throw new BusinessException('婵烇絽娲︾换鍌炴偤閵婏妇鈻斿┑鐘辫兌閻愬﹪鏌￠崒姘煑婵炲棎鍨哄鍕綇椤愩儛鏇㈡煏?, ErrorCode::UPLOAD_FAILED);
+            throw new BusinessException('Failed to move uploaded file.', ErrorCode::UPLOAD_FAILED);
         }
 
         $imageMeta = null;
@@ -469,12 +469,12 @@ final class MediaService
 
         $targetDirectory = base_path('public/uploads/' . $subDir);
         if (!is_dir($targetDirectory) && !mkdir($targetDirectory, 0777, true) && !is_dir($targetDirectory)) {
-            throw new BusinessException('闂佸憡甯楃粙鎴犵磽閹惧鈻斿┑鐘辫兌閻愬﹪鏌ｉ埡濠傛灈缂傚秴绉靛鍕綇椤愩儛鏇㈡煏?, ErrorCode::UPLOAD_FAILED);
+            throw new BusinessException('Failed to create upload directory.', ErrorCode::UPLOAD_FAILED);
         }
 
         $targetPath = $targetDirectory . DIRECTORY_SEPARATOR . $targetFileName;
         if (!copy($sourcePath, $targetPath)) {
-            throw new BusinessException('婵烇絽娲︾换鍌炴偤閵婏妇鈻斿┑鐘辫兌閻愬﹪鏌￠崒姘煑婵炲棎鍨哄鍕綇椤愩儛鏇㈡煏?, ErrorCode::UPLOAD_FAILED);
+            throw new BusinessException('Failed to move uploaded file.', ErrorCode::UPLOAD_FAILED);
         }
 
         $imageMeta = null;
@@ -526,14 +526,14 @@ final class MediaService
         $existing = $this->detail($id);
         $updated = $this->mediaRepository->update($id, array_merge($existing, [
             'folder_name' => $this->normalizeFolderName((string) ($input['folder_name'] ?? ($existing['folder_name'] ?? 'misc'))),
-            'alt_text_zh' => $this->normalizeText((string) ($input['alt_text_zh'] ?? ($existing['alt_text_zh'] ?? '')), 120, '闂佸搫娲ら妵姗€宕鍕闁搞儯鍔嶉幏?),
-            'description_zh' => $this->normalizeText((string) ($input['description_zh'] ?? ($existing['description_zh'] ?? '')), 500, '闂佺顕х换妤呭醇?),
+            'alt_text_zh' => $this->normalizeText((string) ($input['alt_text_zh'] ?? ($existing['alt_text_zh'] ?? '')), 120, 'Alt text'),
+            'description_zh' => $this->normalizeText((string) ($input['description_zh'] ?? ($existing['description_zh'] ?? '')), 500, 'Description'),
             'status' => array_key_exists('status', $input) ? $this->normalizeStatus($input['status']) : (int) ($existing['status'] ?? 1),
             'updated_at' => date('Y-m-d H:i:s'),
         ]));
 
         if ($updated === null) {
-            throw new BusinessException('闁荤姍鍐仾缂侇煈鍠楃粙澶婎吋閸涱垱鎲奸梺闈╄礋閸斿﹪鍩€?, ErrorCode::NOT_FOUND);
+            throw new BusinessException('Asset not found.', ErrorCode::NOT_FOUND);
         }
 
         $this->operationLogService->recordCurrentAction('media', 'media.update', 'media_asset', $updated, 'media updated');
@@ -545,7 +545,7 @@ final class MediaService
     {
         $updated = $this->mediaRepository->updateStatus($id, $this->normalizeStatus($status));
         if ($updated === null) {
-            throw new BusinessException('闁荤姍鍐仾缂侇煈鍠楃粙澶婎吋閸涱垱鎲奸梺闈╄礋閸斿﹪鍩€?, ErrorCode::NOT_FOUND);
+            throw new BusinessException('Asset not found.', ErrorCode::NOT_FOUND);
         }
 
         $this->operationLogService->recordCurrentAction('media', 'media.status.update', 'media_asset', $updated, 'media status updated');
@@ -587,11 +587,12 @@ final class MediaService
         $referenceCount = (int) ($references['reference_count'] ?? 0);
         if ($referenceCount > 0) {
             throw new BusinessException('asset is still referenced by other content', ErrorCode::INVALID_PARAMS);
-        }
+        }
+
 
         $deleted = $this->mediaRepository->delete($id);
         if ($deleted === null) {
-            throw new BusinessException('闁荤姍鍐仾缂侇煈鍠楃粙澶婎吋閸涱垱鎲奸梺闈╄礋閸斿﹪鍩€?, ErrorCode::NOT_FOUND);
+            throw new BusinessException('Asset not found.', ErrorCode::NOT_FOUND);
         }
 
         $diskPath = $this->resolveDiskPath($deleted);
@@ -607,16 +608,16 @@ final class MediaService
     public function rename(int $id, string $newFileName): array
     {
         $newFileName = trim($newFileName);
-        if ($newFileName === '') throw new BusinessException('闂佸搫鍊稿ú锝呪枎閵忋倕瑙︾€广儱瀚悷婵嬫煠閾忣偄鐏婇悹鎰枔缁岸骞侀幒鍡椾壕?, ErrorCode::INVALID_PARAMS);
-        if (mb_strlen($newFileName) > 255) throw new BusinessException('闂佸搫鍊稿ú锝呪枎閵忋倕瑙︾€广儱鐗忕粻鏍⒒閳ь剛鎲楅妶鍌氫壕?, ErrorCode::INVALID_PARAMS);
+        if ($newFileName === '') throw new BusinessException('File name is required.', ErrorCode::INVALID_PARAMS);
+        if (mb_strlen($newFileName) > 255) throw new BusinessException('File name is too long.', ErrorCode::INVALID_PARAMS);
 
         $asset = $this->mediaRepository->find($id);
-        if (!$asset) throw new BusinessException('闁荤姍鍐仾缂侇煈鍠楃粙澶婎吋閸涱垱鎲奸梺闈╄礋閸斿﹪鍩€?, ErrorCode::NOT_FOUND);
+        if (!$asset) throw new BusinessException('Asset not found.', ErrorCode::NOT_FOUND);
 
         $ext = pathinfo($newFileName, PATHINFO_EXTENSION);
         $oldExt = $asset['file_ext'] ?? '';
         if ($ext !== '' && strtolower($ext) !== strtolower($oldExt)) {
-            throw new BusinessException('闂佸搫鍊稿ú锝呪枎閵忋倕绠ラ柍杞拌兌濞兼棃鏌涘顒傂㈢紒鐑╁亾婵＄偑鍊涢濠勭箔瀹€鍕偍闁绘柨鎲￠悗顔济归悩铏瀯缂佺粯宀搁獮鎰媴妞嬪寒浼囬梺鑲╂焿閹活亞妲? . $oldExt . '闂佹寧绋戦ˇ顓㈠焵?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('File extension cannot be changed.', ErrorCode::INVALID_PARAMS);
         }
         if ($ext === '') $newFileName .= '.' . $oldExt;
 
@@ -635,7 +636,7 @@ final class MediaService
             }
         }
 
-        throw new BusinessException('婵炲濮撮幊搴ㄥ储閹寸姵濯奸梻鈧幇顔炬啰婵炵鍋愭慨鏉懨瑰鈧幃褔宕堕妷銏犱壕濞达絿鐡斿鎺懳涢悧鍫濈仸闁?PDF 闂佸搫鍊稿ú锝呪枎閵忋倕违?, ErrorCode::UNSUPPORTED_FILE_TYPE);
+        throw new BusinessException('Unsupported file type.', ErrorCode::UNSUPPORTED_FILE_TYPE);
     }
 
     private function categoryFromFileName(string $fileName): string
@@ -668,20 +669,20 @@ final class MediaService
     {
         $sourcePath = trim($sourcePath);
         if ($sourcePath === '') {
-            throw new BusinessException('缂傚倸鍊搁幖顐︽儍椤栨埃鏀﹂柟閭﹀幗閻庮喖霉閻樺啿鍔堕柣顓熷劤椤曘儵宕熼埞鎯т壕?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('source_path is required.', ErrorCode::INVALID_PARAMS);
         }
 
         if (str_starts_with($sourcePath, 'http://') || str_starts_with($sourcePath, 'https://')) {
-            throw new BusinessException('闂佸搫鍊稿ú锝呪枎閵忋垺宕夋い鏍ㄦ皑缁愮偛鈽夐幘宕囆ラ柛蹇旓耿瀵?URL闂?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('source_path must not be a URL.', ErrorCode::INVALID_PARAMS);
         }
 
         if (str_contains($sourcePath, '..')) {
-            throw new BusinessException('闂佸搫鍊稿ú锝呪枎閵忋垺宕夋い鏍ㄦ皑缁愮偛鈽夐幘宕囆㈤柟顔奸閳绘棃寮村Ο宄颁壕?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('source_path must not contain path traversal.', ErrorCode::INVALID_PARAMS);
         }
 
         $realPath = realpath($sourcePath);
         if ($realPath === false || !is_file($realPath) || !is_readable($realPath)) {
-            throw new BusinessException('濠电姍鍕闁哄鍟粋鎺楀嫉閻㈢數鎲归柣搴㈢⊕閿氭繝鈧鍫濈闁哄稄濡囬悷婵嬫煕濞嗘ê鐏ユい鏇氬嵆瀹曪綁寮介妷銏犱壕?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('source_path file is invalid or unreadable.', ErrorCode::INVALID_PARAMS);
         }
 
         $allowedRoots = array_filter([
@@ -695,7 +696,7 @@ final class MediaService
             }
         }
 
-        throw new BusinessException('濠电姍鍕闁哄鍟粋鎺楀箚閹殿喚鍞撮悗鍨緲鐎氼亞绮径鎰嵍闁靛鍎辩敮鎺楁偣娴ｅ憡鎲告繛鍫熷灥椤斿繘濡烽妶鍥┾枙闂佺儵鏅╅崰鏍礊瀹ュ绀冮柛娑卞亐閸?, ErrorCode::INVALID_PARAMS);
+        throw new BusinessException('source_path is outside allowed import directories.', ErrorCode::INVALID_PARAMS);
     }
 
     /**
@@ -719,12 +720,12 @@ final class MediaService
     {
         $fileName = trim($fileName);
         if ($fileName === '') {
-            throw new BusinessException('缂傚倸鍊搁幖顐︽儍椤栫偛妫橀柛銉檮椤愪粙鏌涘顒傂犻柍?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('file_name is required.', ErrorCode::INVALID_PARAMS);
         }
 
         $fileName = basename($fileName);
         if (preg_match('/^[A-Za-z0-9._-]{1,120}$/', $fileName) !== 1) {
-            throw new BusinessException('闂佸搫鍊稿ú锝呪枎閵忋倕瑙︾€广儱妫涙竟鎰偓娈垮枛缁诲绮径鎰Е闁割偆鍠撻妴濠囨煥濞戞鐒锋い鏇ㄥ墯缁傛帡宕ㄩ鈧埢蹇涙煟椤剙濡奸柣鈯欏唭鎺戭吋閸愶絽浜惧ù锝堫潐濞堝爼鎮楀☉娆嶄粻闁逞屽厸閼冲爼宕戦敐澶娢ュù锝夘棑閻熸捇鏌涢幒鎾崇闁搞倕閰ｉ獮瀣冀椤愩倕褰嬪┑鈽嗗灱娴滅偤宕垫惔銊ノ?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('file_name contains invalid characters.', ErrorCode::INVALID_PARAMS);
         }
 
         $this->assertUploadFileAllowed($fileName);
@@ -741,35 +742,35 @@ final class MediaService
 
         $payload = preg_replace('/\s+/', '', $payload);
         if (!is_string($payload) || $payload === '') {
-            throw new BusinessException('闂佸搫鍊稿ú锝呪枎閵忋倕绀冮柛娑卞弾閸熷洭鏌￠崘顏勑ｉ柡鍛劦婵?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('file_content_base64 is required.', ErrorCode::INVALID_PARAMS);
         }
         $category = $this->categoryFromFileName($fileName);
         $estimatedSize = $this->estimateBase64DecodedSize($payload);
         $maxAllowed = (int) config('upload.limits.' . $category, 0);
         if ($estimatedSize > 0 && $maxAllowed > 0 && $estimatedSize > $maxAllowed) {
-            throw new BusinessException('闂佸搫鍊稿ú锝呪枎閵忋倕绀冮柛娑卞弾閸熷洭寮堕埡浣规悙闁靛洤娲俊?, ErrorCode::FILE_TOO_LARGE);
+            throw new BusinessException('Decoded file exceeds upload size limit.', ErrorCode::FILE_TOO_LARGE);
         }
 
         $binaryContent = base64_decode($payload, true);
         if ($binaryContent === false || $binaryContent === '') {
-            throw new BusinessException('闂佸搫鍊稿ú锝呪枎閵忋倕绀冮柛娑卞弾閸熷洭鏌￠崘顏勑ｉ柡鍛劦閺佸秶浠﹂悙顒婇獜濠电偛顦板ú婵婎暰闂佸搫顑嗛崝鎺旂箔閸屾稑顕遍柣妯挎珪濞堝爼鏌熺拠鈥虫灁闁?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('file_content_base64 is not valid base64 data.', ErrorCode::INVALID_PARAMS);
         }
 
         $extension = $this->extractExtension($fileName);
         $temporaryPath = tempnam(sys_get_temp_dir(), 'cms-media-');
         if ($temporaryPath === false) {
-            throw new BusinessException('闂佸憡甯楃粙鎴犵磽閹惧鈻旈悗娑櫳戦ˇ褍鈽夐幘绛规缂佸崬鐖煎顒勫炊閿旂瓔鍋ㄦ繝銏″劶缁墽鎲撮敃鍌毼?, ErrorCode::UPLOAD_FAILED);
+            throw new BusinessException('Failed to create temporary file.', ErrorCode::UPLOAD_FAILED);
         }
 
         $targetTemporaryPath = $temporaryPath . '.' . $extension;
         if (!@rename($temporaryPath, $targetTemporaryPath)) {
             @unlink($temporaryPath);
-            throw new BusinessException('闂佸憡甯楃粙鎴犵磽閹惧鈻旈悗娑櫳戦ˇ褍鈽夐幘绛规缂佸崬鐖煎顒勫炊閿旂瓔鍋ㄦ繝銏″劶缁墽鎲撮敃鍌毼?, ErrorCode::UPLOAD_FAILED);
+            throw new BusinessException('Failed to prepare temporary file path.', ErrorCode::UPLOAD_FAILED);
         }
 
         if (file_put_contents($targetTemporaryPath, $binaryContent, LOCK_EX) === false) {
             @unlink($targetTemporaryPath);
-            throw new BusinessException('闂佸憡鍔栭悷銉╁矗閸℃鈻旈悗娑櫳戦ˇ褍鈽夐幘绛规缂佸崬鐖煎顒勫炊閿旂瓔鍋ㄦ繝銏″劶缁墽鎲撮敃鍌毼?, ErrorCode::UPLOAD_FAILED);
+            throw new BusinessException('Failed to write temporary file.', ErrorCode::UPLOAD_FAILED);
         }
 
         return $targetTemporaryPath;
@@ -782,7 +783,7 @@ final class MediaService
         }
 
         if (mb_strlen($folderName) > 50 || str_contains($folderName, '..') || preg_match('/[\r\n\t\x00-\x1F\x7F]/u', $folderName) === 1) {
-            throw new BusinessException('闂佺儵鏅╅崰鏍礊瀹ュ瑙︾€广儱娉﹂悙瀵糕枖鐎广儱鎳忛崐銈嗙箾婢跺纾搁柍?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('Folder name is invalid.', ErrorCode::INVALID_PARAMS);
         }
 
         return trim($folderName, " /");
@@ -792,7 +793,7 @@ final class MediaService
     {
         $value = trim($value);
         if (mb_strlen($value) > $maxLength) {
-            throw new BusinessException($fieldLabel . '闂傚倵鍋撻柛顭戝枛椤斿﹪鎮洪幒鎴炲櫣闁搞値鍙冨浠嬪箛椤掆偓閻撴垿鏌?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException($fieldLabel . ' is too long.', ErrorCode::INVALID_PARAMS);
         }
 
         return $value;
@@ -808,19 +809,19 @@ final class MediaService
             return 0;
         }
 
-        throw new BusinessException('闂佺粯顭堥崺鏍焵椤戣法顦﹂柍褜鍓熷Λ璺ㄧ箔婢舵劕瑙﹂柛顐ゅ枔閵嗗﹪鏌?, ErrorCode::INVALID_PARAMS);
+        throw new BusinessException('Invalid status value.', ErrorCode::INVALID_PARAMS);
     }
 
     private function assertFileSizeAllowed(string $sourcePath, string $category): void
     {
         $size = filesize($sourcePath);
         if ($size === false) {
-            throw new BusinessException('闂佸搫鍟版慨鐢垫兜閸撲焦瀚氶悹鍥ㄥ絻缁插潡鏌￠崒姘煑婵炲棎鍨哄鍕槻闁活煈鍓熸俊?, ErrorCode::UPLOAD_FAILED);
+            throw new BusinessException('Unable to read file size.', ErrorCode::UPLOAD_FAILED);
         }
 
         $limit = (int) config('upload.limits.' . $category, 0);
         if ($limit > 0 && $size > $limit) {
-            throw new BusinessException('婵炴垶鎸搁敃锝囨閸洖妫橀柛銉檮椤愯棄顭块崼鍡楀暟濮ｅ牓鎮洪幒鎴炲櫣闁搞値鍙冨浠嬪箛椤掆偓閻撴垿鏌?, ErrorCode::FILE_TOO_LARGE);
+            throw new BusinessException('File exceeds upload size limit.', ErrorCode::FILE_TOO_LARGE);
         }
     }
 
@@ -867,7 +868,7 @@ final class MediaService
     {
         $extension = strtolower((string) pathinfo($fileName, PATHINFO_EXTENSION));
         if ($extension === '') {
-            throw new BusinessException('闂佸搫鍊稿ú锝呪枎閵忥絿鐤€闁告稒鐣埀顒€绻掗弫顕€鏁傞懞銉х暢闂佸湱顣介弲娑㈡儓瀹ュ瑙︾€广儱绻掔粈澶娾槈閹惧瓨鐓ｇ紒顔奸叄瀹曟鎷呯粵瀣櫊闂佹悶鍎辨晶鑺ユ櫠閺嶎厼违濞达絿鐡斿鎺懳涢悧鍫濈仸闁?PDF闂?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('File extension is required.', ErrorCode::INVALID_PARAMS);
         }
 
         return $extension;
@@ -879,7 +880,7 @@ final class MediaService
         $blocked = $this->blockedExtensions();
         foreach ($parts as $part) {
             if (in_array($part, $blocked, true)) {
-                throw new BusinessException('缂備礁鍊烽悞锕傤敆濞戞瑧鈻斿┑鐘辫兌閻愬﹪鏌涘▎妯虹仭濠⒀呮櫕閹壆浠﹂幆褏浠愰梺鐓庣摠绾板秴锕㈡导鏉戞闁搞儻闄勯浠嬫煏?, ErrorCode::UNSUPPORTED_FILE_TYPE);
+                throw new BusinessException('Blocked file extension is not allowed.', ErrorCode::UNSUPPORTED_FILE_TYPE);
             }
         }
 
@@ -892,7 +893,7 @@ final class MediaService
         $allowedExtensions = array_values(array_unique(array_map('strtolower', $allowedExtensions)));
 
         if (!in_array($extension, $allowedExtensions, true)) {
-            throw new BusinessException('婵炲濮撮幊搴ㄥ储閹寸姵濯奸梻鈧幇顔炬啰婵炵鍋愭慨鏉懨瑰鈧幃褔宕堕妷銏犱壕濞达絿鐡斿鎺懳涢悧鍫濈仸闁?PDF 闂佸搫鍊稿ú锝呪枎閵忋倕违?, ErrorCode::UNSUPPORTED_FILE_TYPE);
+            throw new BusinessException('Unsupported file type.', ErrorCode::UNSUPPORTED_FILE_TYPE);
         }
     }
 
@@ -1128,7 +1129,7 @@ final class MediaService
         ];
     }
 
-    // 闂備礁鍟块崢婊堝磻閹剧粯鐓冮柛蹇擃槸娴?Folder Service 闂備礁鍟块崢婊堝磻閹剧粯鐓冮柛蹇擃槸娴?
+    // 闂傚倸鍊搁崐椋庣矆娓氣偓瀹曨垶宕稿Δ鈧崒銊︾節婵犲倻澧曠痪鎯ь煼閺岀喖宕滆鐢盯鏌ｉ幘鍐叉殻闁哄本绋栫粻娑㈠箼閸愨敩锔界箾?Folder Service 闂傚倸鍊搁崐椋庣矆娓氣偓瀹曨垶宕稿Δ鈧崒銊︾節婵犲倻澧曠痪鎯ь煼閺岀喖宕滆鐢盯鏌ｉ幘鍐叉殻闁哄本绋栫粻娑㈠箼閸愨敩锔界箾?
 
     public function folderTree(): array
     {
@@ -1159,8 +1160,8 @@ final class MediaService
     public function createFolder(array $input): array
     {
         $name = trim((string) ($input['name'] ?? ''));
-        if ($name === '') throw new BusinessException('闂佺儵鏅╅崰鏍礊瀹ュ瑙︾€广儱娉﹂悙瀵糕枖鐎广儱鐗嗛崢鏉戔槈閹捐顏犻柍瑙勭墵婵?, ErrorCode::INVALID_PARAMS);
-        if (mb_strlen($name) > 64) throw new BusinessException('闂佺儵鏅╅崰鏍礊瀹ュ瑙︾€广儱娉﹂悙瀛樹氦闁搞儺鍓氬В鎰版煏?, ErrorCode::INVALID_PARAMS);
+        if ($name === '') throw new BusinessException('Folder name is required.', ErrorCode::INVALID_PARAMS);
+        if (mb_strlen($name) > 64) throw new BusinessException('Folder name is too long.', ErrorCode::INVALID_PARAMS);
         return $this->mediaRepository->createFolder([
             'parent_id' => (int) ($input['parent_id'] ?? 0),
             'name' => $name,
@@ -1170,15 +1171,15 @@ final class MediaService
     public function updateFolder(int $id, array $input): array
     {
         $name = trim((string) ($input['name'] ?? ''));
-        if ($name === '') throw new BusinessException('闂佺儵鏅╅崰鏍礊瀹ュ瑙︾€广儱娉﹂悙瀵糕枖鐎广儱鐗嗛崢鏉戔槈閹捐顏犻柍瑙勭墵婵?, ErrorCode::INVALID_PARAMS);
+        if ($name === '') throw new BusinessException('Folder name is required.', ErrorCode::INVALID_PARAMS);
         $folder = $this->mediaRepository->findFolder($id);
-        if (!$folder) throw new BusinessException('闂佺儵鏅╅崰鏍礊瀹ュ棛鈻旂€广儱鎳愰幗鐘绘煕閿斿搫濡搁柍?, ErrorCode::NOT_FOUND);
+        if (!$folder) throw new BusinessException('Folder not found.', ErrorCode::NOT_FOUND);
         $parentId = max(0, (int) ($input['parent_id'] ?? ($folder['parent_id'] ?? 0)));
         if ($parentId === $id) {
-            throw new BusinessException('闂佺粯鐗曟晶搴㈩殽閸ヮ剚鍎庢い鏃囧亹缁夊灝鈽夐幘宕囆ラ柛蹇旓耿閺屽懏寰勭€ｎ亶浠撮梺鐓庮殠娴滐綁妫呴埡鍛?, ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('Folder cannot be its own parent.', ErrorCode::INVALID_PARAMS);
         }
         if ($parentId > 0 && $this->mediaRepository->findFolder($parentId) === null) {
-            throw new BusinessException('闂佺粯鐗曟晶搴㈩殽閸ヮ剚鍎庢い鏃囧亹缁夊灝鈽夐幘宕囆㈤柣掳鍔戝畷鐑藉Ω閿濆倸浜?, ErrorCode::NOT_FOUND);
+            throw new BusinessException('Parent folder not found.', ErrorCode::NOT_FOUND);
         }
 
         $updated = $this->mediaRepository->updateFolder($id, [
@@ -1192,12 +1193,12 @@ final class MediaService
     public function deleteFolder(int $id): array
     {
         $folder = $this->mediaRepository->findFolder($id);
-        if (!$folder) throw new BusinessException('闂佺儵鏅╅崰鏍礊瀹ュ棛鈻旂€广儱鎳愰幗鐘绘煕閿斿搫濡搁柍?, ErrorCode::NOT_FOUND);
+        if (!$folder) throw new BusinessException('Folder not found.', ErrorCode::NOT_FOUND);
         // Check it's empty (no child folders, no assets)
         $children = array_filter($this->mediaRepository->listFolders(), fn (array $f) => ((int) ($f['parent_id'] ?? 0)) === $id);
-        if (!empty($children)) throw new BusinessException('闂佺儵鏅╅崰鏍礊瀹ュ棛鈻旈悗锝傛櫇閻繈鏌￠崼婵愭Ц闁烩剝鐟╅幆鍕敊閼测晝协闂佹寧绋戦張顒€螞閵堝應鏋栭柡鍥╁仜閻忊晠姊婚崟鈺佲偓鎴﹀焵?, ErrorCode::INVALID_PARAMS);
+        if (!empty($children)) throw new BusinessException('Folder is not empty.', ErrorCode::INVALID_PARAMS);
         $counts = $this->mediaRepository->assetCountsPerFolder();
-        if (($counts[$id] ?? 0) > 0) throw new BusinessException('闂佺儵鏅╅崰鏍礊瀹ュ棛鈻旈悗锝傛櫇閻繈鏌?' . $counts[$id] . ' 婵炴垶鎼╂禍婵嬪几閸愨晝顩烽悹浣告贡缁€澶愭煛閸愵亜校缁绢厼鐖煎畷姘舵偐缂佹褰戦梺?, ErrorCode::INVALID_PARAMS);
+        if (($counts[$id] ?? 0) > 0) throw new BusinessException('Folder still contains assets.', ErrorCode::INVALID_PARAMS);
         $deleted = $this->mediaRepository->deleteFolder($id);
         return $deleted ?? $folder;
     }
@@ -1205,18 +1206,18 @@ final class MediaService
     public function sortFolder(int $id, int $sortOrder): ?array
     {
         $folder = $this->mediaRepository->findFolder($id);
-        if (!$folder) throw new BusinessException('闂佺儵鏅╅崰鏍礊瀹ュ棛鈻旂€广儱鎳愰幗鐘绘煕閿斿搫濡搁柍?, ErrorCode::NOT_FOUND);
+        if (!$folder) throw new BusinessException('Folder not found.', ErrorCode::NOT_FOUND);
         return $this->mediaRepository->updateFolderSort($id, $sortOrder);
     }
 
-    // 闂備礁鍟块崢婊堝磻閹剧粯鐓冮柛蹇擃槸娴?Batch Operations 闂備礁鍟块崢婊堝磻閹剧粯鐓冮柛蹇擃槸娴?
+    // 闂傚倸鍊搁崐椋庣矆娓氣偓瀹曨垶宕稿Δ鈧崒銊︾節婵犲倻澧曠痪鎯ь煼閺岀喖宕滆鐢盯鏌ｉ幘鍐叉殻闁哄本绋栫粻娑㈠箼閸愨敩锔界箾?Batch Operations 闂傚倸鍊搁崐椋庣矆娓氣偓瀹曨垶宕稿Δ鈧崒銊︾節婵犲倻澧曠痪鎯ь煼閺岀喖宕滆鐢盯鏌ｉ幘鍐叉殻闁哄本绋栫粻娑㈠箼閸愨敩锔界箾?
 
     /** @param int[] $ids */
     public function batchMove(array $ids, int $targetFolderId): array
     {
-        if (empty($ids)) throw new BusinessException('闂佸搫鐗滄禍顏堝焵椤掆偓椤︽壆鈧哎鍔嶇粋鎺旀媼瀹曞洨协闁荤姍鍐仾缂侇煈鍣ｆ俊?, ErrorCode::INVALID_PARAMS);
+        if (empty($ids)) throw new BusinessException('ids must not be empty.', ErrorCode::INVALID_PARAMS);
         $targetFolder = $targetFolderId > 0 ? $this->mediaRepository->findFolder($targetFolderId) : null;
-        if ($targetFolderId > 0 && !$targetFolder) throw new BusinessException('闂佺儵鏅╅崰妤呮偉閿濆鍎庢い鏃囧亹缁夊灝鈽夐幘宕囆㈤柣掳鍔戝畷鐑藉Ω閿濆倸浜?, ErrorCode::NOT_FOUND);
+        if ($targetFolderId > 0 && !$targetFolder) throw new BusinessException('Target folder not found.', ErrorCode::NOT_FOUND);
 
         $targetFolderName = $targetFolder['name'] ?? 'misc';
         $moved = 0;
@@ -1234,9 +1235,9 @@ final class MediaService
 
     public function batchCopy(array $ids, int $targetFolderId): array
     {
-        if (empty($ids)) throw new BusinessException('闂佸搫鐗滄禍顏堝焵椤掆偓椤︽壆鈧哎鍔嶇粋鎺旀媼瀹曞洨协闁荤姍鍐仾缂侇煈鍣ｆ俊?, ErrorCode::INVALID_PARAMS);
+        if (empty($ids)) throw new BusinessException('ids must not be empty.', ErrorCode::INVALID_PARAMS);
         $targetFolder = $targetFolderId > 0 ? $this->mediaRepository->findFolder($targetFolderId) : null;
-        if ($targetFolderId > 0 && !$targetFolder) throw new BusinessException('闂佺儵鏅╅崰妤呮偉閿濆鍎庢い鏃囧亹缁夊灝鈽夐幘宕囆㈤柣掳鍔戝畷鐑藉Ω閿濆倸浜?, ErrorCode::NOT_FOUND);
+        if ($targetFolderId > 0 && !$targetFolder) throw new BusinessException('Target folder not found.', ErrorCode::NOT_FOUND);
 
         $targetFolderName = $targetFolder['name'] ?? 'misc';
         $copied = 0;
@@ -1306,7 +1307,7 @@ final class MediaService
     /** @param int[] $ids */
     public function batchDelete(array $ids): array
     {
-        if (empty($ids)) throw new BusinessException('闂佸搫鐗滄禍顏堝焵椤掆偓椤︽壆鈧哎鍔嶇粋鎺旀媼瀹曞洨协闁荤姍鍐仾缂侇煈鍣ｆ俊?, ErrorCode::INVALID_PARAMS);
+        if (empty($ids)) throw new BusinessException('ids must not be empty.', ErrorCode::INVALID_PARAMS);
         $deleted = 0;
         foreach ($ids as $id) {
             $asset = $this->mediaRepository->find((int) $id);

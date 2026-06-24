@@ -130,8 +130,8 @@ async function main() {
       APP_ALLOW_RUNTIME_FALLBACK: '1',
       PREFER_RUNTIME_STORAGE: '1',
       AUTH_JWT_SECRET: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-      DB_HOST: '',
-      DB_DATABASE: ''
+      DB_HOST: 'invalid-runtime-db-host',
+      DB_DATABASE: 'invalid_runtime_db'
     };
 
     const issued = JSON.parse(execFileSync('php', ['-r', buildIssueTokenScript()], {

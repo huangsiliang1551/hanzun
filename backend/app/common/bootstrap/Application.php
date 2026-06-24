@@ -114,7 +114,11 @@ final class Application
             ], true) => 403,
             $errorCode === ErrorCode::NOT_FOUND => 404,
             $errorCode === ErrorCode::ALREADY_EXISTS => 409,
-            $errorCode === ErrorCode::INVALID_PARAMS => 422,
+            in_array($errorCode, [
+                ErrorCode::INVALID_PARAMS,
+                ErrorCode::UNSUPPORTED_FILE_TYPE,
+                ErrorCode::FILE_TOO_LARGE,
+            ], true) => 422,
             $errorCode === 429 => 429,
             $errorCode === ErrorCode::INTERNAL_ERROR => 500,
             default => 400,

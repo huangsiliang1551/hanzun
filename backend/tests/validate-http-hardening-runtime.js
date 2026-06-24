@@ -153,8 +153,8 @@ async function withServer(env, callback) {
       AUTH_JWT_SECRET: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
       APP_ALLOW_RUNTIME_FALLBACK: '1',
       PREFER_RUNTIME_STORAGE: '1',
-      DB_HOST: '',
-      DB_DATABASE: '',
+      DB_HOST: 'invalid-runtime-db-host',
+      DB_DATABASE: 'invalid_runtime_db',
       ...env
     },
     stdio: ['ignore', 'pipe', 'pipe']
