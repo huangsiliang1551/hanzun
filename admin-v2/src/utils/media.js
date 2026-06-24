@@ -1,4 +1,4 @@
-const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'svg', 'gif']);
+const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif']);
 const VIDEO_EXTENSIONS = new Set(['mp4', 'webm', 'mov', 'm4v']);
 const PDF_EXTENSIONS = new Set(['pdf']);
 

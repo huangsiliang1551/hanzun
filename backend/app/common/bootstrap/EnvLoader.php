@@ -28,6 +28,10 @@ final class EnvLoader
             $value = trim($value);
             $value = trim($value, "\"'");
 
+            if (array_key_exists($name, $_ENV) || array_key_exists($name, $_SERVER) || getenv($name) !== false) {
+                continue;
+            }
+
             $_ENV[$name] = $value;
             $_SERVER[$name] = $value;
             putenv($name . '=' . $value);

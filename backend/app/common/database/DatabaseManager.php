@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 declare(strict_types=1);
 
@@ -7,6 +7,7 @@ namespace app\common\database;
 use app\common\config\ConfigRepository;
 use PDO;
 use PDOException;
+use RuntimeException;
 
 final class DatabaseManager
 {
@@ -16,6 +17,8 @@ final class DatabaseManager
     private array $config = [];
 
     private ?PDO $pdo = null;
+
+    private ?RuntimeException $connectionError = null;
 
     private bool $connectionAttempted = false;
 
@@ -38,6 +41,7 @@ final class DatabaseManager
         }
         $this->config = $config;
         $this->pdo = null;
+        $this->connectionError = null;
         $this->connectionAttempted = false;
         $this->initialConfigured = true;
     }
@@ -60,6 +64,10 @@ final class DatabaseManager
         }
 
         if ($this->connectionAttempted) {
+            if ($this->connectionError instanceof RuntimeException && !$this->envBool('APP_ALLOW_RUNTIME_FALLBACK', false)) {
+                throw $this->connectionError;
+            }
+
             return null;
         }
 
@@ -88,9 +96,20 @@ final class DatabaseManager
             );
 
             return $this->pdo;
-        } catch (PDOException) {
+        } catch (PDOException $exception) {
+            $message = sprintf(
+                'Database connection failed for %s@%s:%s/%s: %s',
+                (string) ($this->config['username'] ?? ''),
+                (string) ($this->config['hostname'] ?? ''),
+                (string) ($this->config['hostport'] ?? ''),
+                (string) ($this->config['database'] ?? ''),
+                $exception->getMessage()
+            );
+            error_log($message);
+
+            $this->connectionError = new RuntimeException($message, 0, $exception);
             if (!$allowFallback) {
-                return null;
+                throw $this->connectionError;
             }
 
             return null;

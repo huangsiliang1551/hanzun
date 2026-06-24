@@ -17,21 +17,68 @@ final class JsonFileStore
 
     public function all(): array
     {
+        return $this->withLock(LOCK_SH, fn (): array => $this->readUnlocked());
+    }
+
+    public function put(array $data): void
+    {
+        $this->withLock(LOCK_EX, function () use ($data): void {
+            $this->writeUnlocked($data);
+        });
+    }
+
+    public function transaction(callable $callback): array
+    {
+        return $this->withLock(LOCK_EX, function () use ($callback): array {
+            $current = $this->readUnlocked();
+            $next = $callback($current);
+            if (!is_array($next)) {
+                throw new \RuntimeException('JsonFileStore transaction callback must return an array payload.');
+            }
+
+            $this->writeUnlocked($next);
+
+            return $next;
+        });
+    }
+
+    /**
+     * @template T
+     * @param callable(): T $callback
+     * @return T
+     */
+    private function withLock(int $lockType, callable $callback): mixed
+    {
+        $directory = dirname($this->filePath);
+        if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
+            throw new \RuntimeException('Unable to create runtime storage directory.');
+        }
+
+        $lockPath = $this->filePath . '.lock';
+        $lock = fopen($lockPath, 'c+');
+        if (!is_resource($lock) || !flock($lock, $lockType)) {
+            if (is_resource($lock)) {
+                fclose($lock);
+            }
+
+            throw new \RuntimeException('Unable to lock storage file.');
+        }
+
+        try {
+            return $callback();
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
+    }
+
+    private function readUnlocked(): array
+    {
         if (!is_file($this->filePath)) {
             return [];
         }
 
-        $file = fopen($this->filePath, 'r');
-        if (!is_resource($file) || !flock($file, LOCK_SH)) {
-            if (is_resource($file)) {
-                fclose($file);
-            }
-            throw new \RuntimeException('Unable to lock storage file.');
-        }
-
         $json = file_get_contents($this->filePath);
-        flock($file, LOCK_UN);
-        fclose($file);
         if ($json === false || $json === '') {
             return [];
         }
@@ -44,19 +91,8 @@ final class JsonFileStore
         return is_array($decoded) ? $decoded : [];
     }
 
-    public function put(array $data): void
+    private function writeUnlocked(array $data): void
     {
-        $directory = dirname($this->filePath);
-        if (!is_dir($directory)) {
-            mkdir($directory, 0777, true);
-        }
-
-        $lockPath = $this->filePath . '.lock';
-        $lock = fopen($lockPath, 'c');
-        if (!is_resource($lock) || !flock($lock, LOCK_EX)) {
-            throw new \RuntimeException('Unable to lock storage file.');
-        }
-
         $tmpPath = $this->filePath . '.tmp.' . getmypid();
 
         try {
@@ -72,8 +108,6 @@ final class JsonFileStore
                 throw new \RuntimeException('Unable to write runtime storage file.');
             }
         } finally {
-            flock($lock, LOCK_UN);
-            fclose($lock);
             if (is_file($tmpPath)) {
                 @unlink($tmpPath);
             }

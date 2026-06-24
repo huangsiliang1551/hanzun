@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace app\service\auth;
 
+use app\common\auth\BearerToken;
 use app\common\exception\BusinessException;
 use app\enum\ErrorCode;
 use app\repository\AdminUserRepository;
@@ -94,7 +95,7 @@ final class AuthService
 
     public function logout(string $authorization): void
     {
-        $token = $this->parseBearerToken($authorization);
+        $token = BearerToken::extract($authorization);
         $user = current_user();
         $this->sessionService->revokeByAccessToken($token);
 
@@ -240,4 +241,3 @@ final class AuthService
         return trim((string) $matches[1]);
     }
 }
-

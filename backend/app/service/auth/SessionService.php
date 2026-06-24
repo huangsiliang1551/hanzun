@@ -38,19 +38,21 @@ final class SessionService
         $refreshToken = SimpleToken::encode($refreshPayload, $secret);
 
         if (RuntimeStorage::enabled()) {
-            $sessions = $this->sessionStore()->all();
-            $sessions[$sessionCode] = [
-                'session_code' => $sessionCode,
-                'user_id' => (int) ($user['id'] ?? 0),
-                'username' => (string) ($user['username'] ?? ''),
-                'nickname' => (string) ($user['nickname'] ?? $user['username'] ?? ''),
-                'status' => 'active',
-                'refresh_token_hash' => hash('sha256', $refreshToken),
-                'access_expires_at' => $accessExpiresAt,
-                'refresh_expires_at' => $refreshExpiresAt,
-                'updated_at' => date(DATE_ATOM),
-            ];
-            $this->sessionStore()->put($sessions);
+            $this->sessionStore()->transaction(function (array $sessions) use ($accessExpiresAt, $refreshExpiresAt, $refreshToken, $sessionCode, $user): array {
+                $sessions[$sessionCode] = [
+                    'session_code' => $sessionCode,
+                    'user_id' => (int) ($user['id'] ?? 0),
+                    'username' => (string) ($user['username'] ?? ''),
+                    'nickname' => (string) ($user['nickname'] ?? $user['username'] ?? ''),
+                    'status' => 'active',
+                    'refresh_token_hash' => hash('sha256', $refreshToken),
+                    'access_expires_at' => $accessExpiresAt,
+                    'refresh_expires_at' => $refreshExpiresAt,
+                    'updated_at' => date(DATE_ATOM),
+                ];
+
+                return $sessions;
+            });
         } else {
         $pdo = DatabaseManager::instance()->connection();
         if ($pdo instanceof PDO) {
@@ -153,28 +155,42 @@ final class SessionService
 
         if (RuntimeStorage::enabled()) {
             $sessionCode = (string) ($payload['session_code'] ?? '');
-            $sessions = $this->sessionStore()->all();
-            $session = $sessions[$sessionCode] ?? null;
-            if (!is_array($session) || (string) ($session['status'] ?? '') !== 'active') {
-                return null;
-            }
-            if ((int) ($session['refresh_expires_at'] ?? 0) < time()) {
-                return null;
-            }
-            if (!hash_equals((string) ($session['refresh_token_hash'] ?? ''), hash('sha256', $refreshToken))) {
+            $now = time();
+            $userId = 0;
+            $rotationAllowed = false;
+
+            $this->sessionStore()->transaction(function (array $sessions) use ($now, $refreshToken, $sessionCode, &$rotationAllowed, &$userId): array {
+                $session = $sessions[$sessionCode] ?? null;
+                if (!is_array($session) || (string) ($session['status'] ?? '') !== 'active') {
+                    return $sessions;
+                }
+
+                if ((int) ($session['refresh_expires_at'] ?? 0) < $now) {
+                    return $sessions;
+                }
+
+                if (!hash_equals((string) ($session['refresh_token_hash'] ?? ''), hash('sha256', $refreshToken))) {
+                    return $sessions;
+                }
+
+                $session['status'] = 'revoked';
+                $session['revoked_at'] = date(DATE_ATOM);
+                $session['updated_at'] = date(DATE_ATOM);
+                $sessions[$sessionCode] = $session;
+                $rotationAllowed = true;
+                $userId = (int) ($session['user_id'] ?? 0);
+
+                return $sessions;
+            });
+
+            if (!$rotationAllowed || $userId <= 0) {
                 return null;
             }
 
-            $user = $this->userRepository()->findById((int) ($session['user_id'] ?? 0));
+            $user = $this->userRepository()->findById($userId);
             if (!is_array($user) || (int) ($user['status'] ?? 0) !== 1) {
                 return null;
             }
-
-            $session['status'] = 'revoked';
-            $session['revoked_at'] = date(DATE_ATOM);
-            $session['updated_at'] = date(DATE_ATOM);
-            $sessions[$sessionCode] = $session;
-            $this->sessionStore()->put($sessions);
 
             return $this->issueTokens([
                 'id' => (int) $user['id'],
@@ -255,14 +271,16 @@ final class SessionService
         }
 
         if (RuntimeStorage::enabled()) {
-            $sessions = $this->sessionStore()->all();
             $sessionCode = (string) ($payload['session_code'] ?? '');
-            if (isset($sessions[$sessionCode]) && is_array($sessions[$sessionCode])) {
-                $sessions[$sessionCode]['status'] = 'revoked';
-                $sessions[$sessionCode]['revoked_at'] = date(DATE_ATOM);
-                $sessions[$sessionCode]['updated_at'] = date(DATE_ATOM);
-                $this->sessionStore()->put($sessions);
-            }
+            $this->sessionStore()->transaction(function (array $sessions) use ($sessionCode): array {
+                if (isset($sessions[$sessionCode]) && is_array($sessions[$sessionCode])) {
+                    $sessions[$sessionCode]['status'] = 'revoked';
+                    $sessions[$sessionCode]['revoked_at'] = date(DATE_ATOM);
+                    $sessions[$sessionCode]['updated_at'] = date(DATE_ATOM);
+                }
+
+                return $sessions;
+            });
             return;
         }
 
@@ -283,18 +301,20 @@ final class SessionService
         }
 
         if (RuntimeStorage::enabled()) {
-            $sessions = $this->sessionStore()->all();
-            foreach ($sessions as $sessionCode => $session) {
-                if (!is_array($session) || (int) ($session['user_id'] ?? 0) !== $userId) {
-                    continue;
+            $this->sessionStore()->transaction(function (array $sessions) use ($userId): array {
+                foreach ($sessions as $sessionCode => $session) {
+                    if (!is_array($session) || (int) ($session['user_id'] ?? 0) !== $userId) {
+                        continue;
+                    }
+
+                    $session['status'] = 'revoked';
+                    $session['revoked_at'] = date(DATE_ATOM);
+                    $session['updated_at'] = date(DATE_ATOM);
+                    $sessions[$sessionCode] = $session;
                 }
 
-                $session['status'] = 'revoked';
-                $session['revoked_at'] = date(DATE_ATOM);
-                $session['updated_at'] = date(DATE_ATOM);
-                $sessions[$sessionCode] = $session;
-            }
-            $this->sessionStore()->put($sessions);
+                return $sessions;
+            });
             return;
         }
 

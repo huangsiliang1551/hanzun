@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $basePath = 'C:/Users/ZhuanZ1/my-project/涵尊实业有限公司/backend';
 require_once $basePath . '/app/common/bootstrap/Autoloader.php';
 require_once $basePath . '/app/common/bootstrap/EnvLoader.php';

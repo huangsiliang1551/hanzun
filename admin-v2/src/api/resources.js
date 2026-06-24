@@ -12,9 +12,9 @@ const SERVER_HINTS = {
 export const RESOURCE_UPLOAD_RULES = {
   image: {
     label: 'Image',
-    extensions: ['jpg', 'jpeg', 'png', 'webp', 'svg'],
-    mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
-    accept: '.jpg,.jpeg,.png,.webp,.svg,image/jpeg,image/png,image/webp,image/svg+xml',
+    extensions: ['jpg', 'jpeg', 'png', 'webp'],
+    mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    accept: '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp',
     maxSize: 5 * 1024 * 1024,
   },
   video: {

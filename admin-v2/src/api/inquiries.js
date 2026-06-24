@@ -1,4 +1,4 @@
-﻿import { request } from '@/api/client';
+import { request } from '@/api/client';
 
 export function getInquiries(params) {
   return request('/admin/inquiries', {

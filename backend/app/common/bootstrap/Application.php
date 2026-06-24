@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 declare(strict_types=1);
 
@@ -18,7 +18,7 @@ final class Application
 {
     public function __construct(
         private readonly Router $router,
-        private readonly Request $request
+        private ?Request $request = null
     ) {
     }
 
@@ -46,31 +46,34 @@ final class Application
 
         $router = new Router($routes);
 
-        return new self($router, Request::capture());
+        return new self($router);
     }
 
     public function run(): void
     {
-        if ($this->request->method() === 'OPTIONS') {
-            ResponseEmitter::noContent();
-
-            return;
-        }
-
         try {
+            $this->request ??= Request::capture();
+            if ($this->request->method() === 'OPTIONS') {
+                ResponseEmitter::noContent();
+
+                return;
+            }
+
             RequestContext::setRequest($this->request);
             $result = $this->router->dispatch($this->request);
             ResponseEmitter::json($result, 200);
         } catch (BusinessException $exception) {
+            $requestId = $this->request?->requestId() ?? bin2hex(random_bytes(8));
             ResponseEmitter::json([
                 'code' => $exception->getErrorCode(),
                 'message' => $exception->getMessage(),
                 'data' => null,
                 'meta' => $exception->getMeta(),
-                'request_id' => $this->request->requestId(),
+                'request_id' => $requestId,
                 'timestamp' => time(),
             ], $this->statusFromBusinessException($exception));
         } catch (Throwable $exception) {
+            $requestId = $this->request?->requestId() ?? bin2hex(random_bytes(8));
             $debug = (bool) env('APP_DEBUG', false);
             $message = $debug ? $exception->getMessage() : 'Internal server error.';
 
@@ -87,7 +90,7 @@ final class Application
                 'message' => $message,
                 'data' => null,
                 'meta' => [],
-                'request_id' => $this->request->requestId(),
+                'request_id' => $requestId,
                 'timestamp' => time(),
             ], 500);
         } finally {
