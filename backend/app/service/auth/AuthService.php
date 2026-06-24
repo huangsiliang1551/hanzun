@@ -25,7 +25,7 @@ final class AuthService
     {
         $username = trim($username);
         if ($username === '') {
-            throw new BusinessException('用户名不能为空。', ErrorCode::INVALID_PARAMS);
+            throw new BusinessException('Username is required.', ErrorCode::INVALID_PARAMS);
         }
 
         $this->checkLoginLockout($username);
@@ -34,19 +34,19 @@ final class AuthService
         if ($user === null) {
             $this->recordLoginFailure($username);
             $this->operationLogService->recordLoginAttempt($username, false, null, 'invalid credentials');
-            throw new BusinessException('账号或密码错误。', ErrorCode::UNAUTHORIZED);
+            throw new BusinessException('Invalid credentials.', ErrorCode::UNAUTHORIZED);
         }
 
         if (!$this->adminUserRepository->verifyPassword($user, $password)) {
             $this->recordLoginFailure($username);
             $this->operationLogService->recordLoginAttempt($username, false, (int) ($user['id'] ?? 0), 'invalid credentials');
-            throw new BusinessException('账号或密码错误。', ErrorCode::UNAUTHORIZED);
+            throw new BusinessException('Invalid credentials.', ErrorCode::UNAUTHORIZED);
         }
 
         if ((int) ($user['status'] ?? 0) !== 1) {
             $this->recordLoginFailure($username);
             $this->operationLogService->recordLoginAttempt($username, false, (int) ($user['id'] ?? 0), 'user disabled');
-            throw new BusinessException('账号已禁用。', ErrorCode::USER_DISABLED);
+            throw new BusinessException('User is disabled.', ErrorCode::USER_DISABLED);
         }
 
         $tokens = $this->sessionService->issueTokens($user);
@@ -87,7 +87,7 @@ final class AuthService
     {
         $tokens = $this->sessionService->refresh($refreshToken);
         if ($tokens === null) {
-            throw new BusinessException('refresh token 已失效', ErrorCode::INVALID_REFRESH_TOKEN);
+            throw new BusinessException('Refresh token is invalid.', ErrorCode::INVALID_REFRESH_TOKEN);
         }
 
         return $tokens;
@@ -125,7 +125,7 @@ final class AuthService
     {
         $user = current_user();
         if ($user === null) {
-            throw new BusinessException('登录会话已失效', ErrorCode::UNAUTHORIZED);
+            throw new BusinessException('Login session has expired.', ErrorCode::UNAUTHORIZED);
         }
 
         return [
@@ -182,7 +182,7 @@ final class AuthService
         $elapsed = time() - (int) $lastTime;
         $remaining = max(0, $lockSeconds - $elapsed);
         if ($remaining > 0) {
-            throw new BusinessException('登录失败次数过多，请稍后再试。', 429);
+            throw new BusinessException('Too many failed login attempts. Please try again later.', 429);
         }
     }
 
@@ -232,12 +232,4 @@ final class AuthService
         return $ip === '' ? '127.0.0.1' : $ip;
     }
 
-    private function parseBearerToken(string $authorization): string
-    {
-        if (!preg_match('/^Bearer\s+(.+)$/i', trim($authorization), $matches)) {
-            throw new BusinessException('登录会话已失效', ErrorCode::UNAUTHORIZED);
-        }
-
-        return trim((string) $matches[1]);
-    }
 }

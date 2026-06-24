@@ -20,25 +20,17 @@ class AuthMiddleware
     {
         $authorization = $request->header('Authorization', '');
         if ($authorization === '') {
-            throw new BusinessException('登录会话已失效', ErrorCode::UNAUTHORIZED);
+            throw new BusinessException('Login session has expired.', ErrorCode::UNAUTHORIZED);
         }
 
         $token = BearerToken::extract($authorization);
         $user = $this->sessionService->validateAccessToken($token);
         if ($user === null) {
-            throw new BusinessException('登录会话已失效', ErrorCode::UNAUTHORIZED);
+            throw new BusinessException('Login session has expired.', ErrorCode::UNAUTHORIZED);
         }
 
         RequestContext::setUser($user);
         return $next($request);
     }
 
-    private function parseBearerToken(string $authorization): string
-    {
-        if (!preg_match('/^Bearer\s+(.+)$/i', trim($authorization), $matches)) {
-            throw new BusinessException('登录会话已失效', ErrorCode::UNAUTHORIZED);
-        }
-
-        return trim((string) $matches[1]);
-    }
 }
