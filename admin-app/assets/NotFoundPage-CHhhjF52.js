@@ -1,1 +1,0 @@
-import{j as t}from"./react-vendor-Bp5DBq7c.js";import{a as o}from"./router-vendor-D7mi0fHv.js";import{R as r,B as s}from"./index-BCLWEUEa.js";import"./ant-icons-CCKU6reG.js";function m(){const a=o();return t.jsx(r,{status:"404",title:"页面未找到",subTitle:"该路由暂未配置，返回后台继续操作。",extra:t.jsx(s,{type:"primary",onClick:()=>a("/dashboard"),children:"返回看板"})})}export{m as default};

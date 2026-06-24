@@ -1,5 +1,8 @@
 import { resolveAssetUrl } from '@/utils/media';
 
+const ISO_LANGUAGE_PATTERN = /^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i;
+const ISO_COUNTRY_PATTERN = /^[A-Z]{2}$/;
+
 export const LANGUAGE_PRESETS = [
   { code: 'zh', zhName: '普通话', englishName: 'Mandarin Chinese', nativeName: '中文' },
   { code: 'en', zhName: '英语', englishName: 'English', nativeName: 'English' },
@@ -48,7 +51,7 @@ export const LANGUAGE_PRESETS = [
   { code: 'et', zhName: '爱沙尼亚语', englishName: 'Estonian', nativeName: 'Eesti' },
 ];
 
-const COUNTRY_CODES = [
+const COUNTRY_CODES_FALLBACK = [
   'AE', 'AR', 'AT', 'AU', 'BD', 'BE', 'BG', 'BH', 'BR', 'BY', 'CA', 'CH', 'CL', 'CN', 'CO', 'CR',
   'CZ', 'DE', 'DK', 'DO', 'DZ', 'EC', 'EE', 'EG', 'ES', 'FI', 'FR', 'GB', 'GE', 'GH', 'GR',
   'GT', 'HK', 'HR', 'HU', 'ID', 'IE', 'IL', 'IN', 'IQ', 'IR', 'IS', 'IT', 'JM', 'JO', 'JP',
@@ -57,6 +60,20 @@ const COUNTRY_CODES = [
   'PL', 'PR', 'PT', 'PY', 'QA', 'RO', 'RS', 'RU', 'SA', 'SE', 'SG', 'SI', 'SK', 'SV', 'TH',
   'TN', 'TR', 'TW', 'UA', 'US', 'UY', 'VE', 'VN', 'ZA',
 ];
+
+function detectSupportedCountries() {
+  if (typeof Intl.supportedValuesOf === 'function') {
+    try {
+      return Intl.supportedValuesOf('region');
+    } catch {
+      // Fallback to static list when Intl data is unavailable.
+    }
+  }
+  return COUNTRY_CODES_FALLBACK;
+}
+
+const COUNTRY_CODES = Array.from(new Set((detectSupportedCountries() || []).filter((code) => ISO_COUNTRY_PATTERN.test(code))));
+const COUNTRY_CODE_SET = new Set(COUNTRY_CODES);
 
 const COUNTRY_DIAL_CODE_MAP = {
   '1': 'US',
@@ -160,15 +177,6 @@ const COUNTRY_DIAL_CODE_MAP = {
   '998': 'UZ',
 };
 
-const LOCAL_FLAG_CODES = new Set([
-  'ae', 'ar', 'at', 'au', 'be', 'bg', 'br', 'ca', 'ch', 'cn', 'cz', 'de', 'dk', 'eg', 'es',
-  'fi', 'fr', 'gb', 'gr', 'hk', 'hr', 'hu', 'id', 'ie', 'in', 'it', 'jp', 'kr', 'la', 'lk',
-  'lt', 'lu', 'lv', 'ma', 'my', 'nl', 'no', 'nz', 'pk', 'pl', 'pt', 'ro', 'rs', 'ru', 'sa',
-  'se', 'sg', 'th', 'tr', 'tw', 'ua', 'us', 'vn', 'za',
-]);
-
-const FLAG_CDN_BASE_URL = 'https://flagcdn.com';
-
 const LANGUAGE_COUNTRY_HINTS = {
   ar: ['AE', 'SA', 'EG'],
   de: ['DE', 'AT', 'CH'],
@@ -186,6 +194,9 @@ const LANGUAGE_COUNTRY_HINTS = {
   pt: ['PT', 'BR'],
   ro: ['RO'],
   ru: ['RU'],
+  el: ['GR'],
+  cs: ['CZ'],
+  hu: ['HU'],
   sv: ['SE'],
   th: ['TH'],
   tr: ['TR'],
@@ -195,8 +206,38 @@ const LANGUAGE_COUNTRY_HINTS = {
   zh: ['CN', 'HK', 'TW', 'SG'],
 };
 
-const ISO_LANGUAGE_PATTERN = /^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i;
-const ISO_COUNTRY_PATTERN = /^[A-Z]{2}$/;
+function getLanguageCountryFallback(languageCode) {
+  const normalized = normalizeLanguageCode(languageCode);
+  if (!normalized) {
+    return '';
+  }
+
+  const [baseCode, regionCode] = normalized.split('-');
+  const hinted = LANGUAGE_COUNTRY_HINTS[baseCode];
+  const firstHint = String((Array.isArray(hinted) ? hinted[0] : '') || '').toUpperCase();
+  if (ISO_COUNTRY_PATTERN.test(firstHint)) {
+    return firstHint;
+  }
+
+  if (ISO_COUNTRY_PATTERN.test(String(regionCode || '').toUpperCase())) {
+    return String(regionCode || '').toUpperCase();
+  }
+
+  if (ISO_COUNTRY_PATTERN.test(baseCode.toUpperCase())) {
+    return baseCode.toUpperCase();
+  }
+
+  try {
+    const maximizedLocale = new Intl.Locale(baseCode).maximize();
+    if (ISO_COUNTRY_PATTERN.test(String(maximizedLocale.region || '').toUpperCase())) {
+      return String(maximizedLocale.region).toUpperCase();
+    }
+  } catch {
+    // Ignore unsupported locales.
+  }
+
+  return '';
+}
 
 function getDisplayNames(locale, type) {
   try {
@@ -270,11 +311,7 @@ function toFlagImageUrl(code) {
   }
 
   const lowerCode = normalized.toLowerCase();
-  if (LOCAL_FLAG_CODES.has(lowerCode)) {
-    return resolveAssetUrl(`/assets/images/flags/${lowerCode}.svg`);
-  }
-
-  return `${FLAG_CDN_BASE_URL}/${lowerCode}.svg`;
+  return resolveAssetUrl(`/assets/images/flags/${lowerCode}.svg`);
 }
 
 function findLanguagePreset(code) {
@@ -347,9 +384,15 @@ export function getLanguageMeta(code, enabledLanguages = []) {
   const computedEnglishName = safeDisplayName(enDisplayNames, normalized, '');
   const computedNativeName = getNativeLanguageName(normalized, '');
 
-  const zhName = String(existing?.zh_name || computedZhName || preset?.zhName || fallbackLabel).trim();
-  const englishName = String(existing?.english_name || computedEnglishName || preset?.englishName || fallbackLabel).trim();
-  const nativeName = String(existing?.name || computedNativeName || preset?.nativeName || englishName || zhName).trim();
+  const zhName = String(
+    existing?.zh_name || preset?.zhName || computedZhName || fallbackLabel,
+  ).trim();
+  const englishName = String(
+    existing?.english_name || preset?.englishName || computedEnglishName || fallbackLabel,
+  ).trim();
+  const nativeName = String(
+    existing?.native_name || preset?.nativeName || computedNativeName || englishName || zhName,
+  ).trim();
   const name = nativeName || zhName || englishName || fallbackLabel;
 
   return {
@@ -364,6 +407,41 @@ export function getLanguageMeta(code, enabledLanguages = []) {
       englishName,
       nativeName,
     }),
+  };
+}
+
+export function getLanguageMetaWithFlag(code) {
+  const normalized = normalizeLanguageCode(code);
+  if (!normalized) {
+    return {
+      ...getLanguageMeta(code),
+      flag: '',
+      flagUrl: '',
+      flagCountryCode: '',
+      flagCountryName: '',
+    };
+  }
+
+  const countryCode = getLanguageCountryFallback(normalized);
+
+  if (!ISO_COUNTRY_PATTERN.test(countryCode)) {
+    return {
+      ...getLanguageMeta(normalized),
+      flag: '',
+      flagUrl: '',
+      flagCountryCode: '',
+      flagCountryName: '',
+    };
+  }
+
+  const countryMeta = getCountryMeta(countryCode);
+
+  return {
+    ...getLanguageMeta(normalized),
+    flag: countryMeta.flag,
+    flagUrl: countryMeta.flagUrl,
+    flagCountryCode: countryMeta.code,
+    flagCountryName: countryMeta.name,
   };
 }
 
@@ -454,15 +532,13 @@ export function buildCountryOptions(enabledLanguages = []) {
 
   enabled.forEach((item) => {
     const languageCode = normalizeLanguageCode(item?.code);
-    const baseCode = languageCode.split('-')[0];
-    (LANGUAGE_COUNTRY_HINTS[baseCode] || []).forEach((countryCode) => {
-      if (seenCodes.has(countryCode)) {
-        return;
-      }
+    const countryCode = getLanguageCountryFallback(languageCode);
+    if (!countryCode || seenCodes.has(countryCode)) {
+      return;
+    }
 
-      seenCodes.add(countryCode);
-      recommendedCodes.push(countryCode);
-    });
+    seenCodes.add(countryCode);
+    recommendedCodes.push(countryCode);
   });
 
   const allCodes = [...recommendedCodes, ...COUNTRY_CODES.filter((code) => !seenCodes.has(code))];
