@@ -189,8 +189,10 @@ export function SiteBuildProvider({ children }) {
     function handleCreated(event) {
       const job = normalizeJob(event?.detail?.job || event?.detail);
       if (!job?.id) return;
+      setModalOpen(true);
       setCurrentJob(job);
-      loadDetail(job.id, true);
+      setActiveJob(job);
+      loadDetail(job.id, false);
     }
 
     window.addEventListener('site-build-job-created', handleCreated);
