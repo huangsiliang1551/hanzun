@@ -52,6 +52,10 @@ backend/public/uploads/
 *.sqlite
 *.sqlite3
 *.lock
+!composer.lock
+!backend/composer.lock
+!package-lock.json
+!admin-v2/package-lock.json
 *.key
 *.pem
 *.crt
