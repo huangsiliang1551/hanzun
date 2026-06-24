@@ -14,6 +14,8 @@ use app\service\rbac\RbacService;
 
 final class AuthService
 {
+    private static ?bool $supportsLoginKey = null;
+
     public function __construct(
         private readonly AdminUserRepository $adminUserRepository = new AdminUserRepository(),
         private readonly SessionService $sessionService = new SessionService(),
@@ -150,29 +152,58 @@ final class AuthService
         $lockSeconds = $this->configInt('auth.login_lock_seconds', 900);
         $cutoff = date('Y-m-d H:i:s', time() - $windowSeconds);
 
-        $countStatement = $pdo->prepare(
-            'SELECT COUNT(*) AS failure_count
-             FROM admin_login_logs
-             WHERE login_key = :login_key AND is_success = 0 AND created_at > :cutoff'
-        );
-        $countStatement->execute([
-            'login_key' => $loginKey,
-            'cutoff' => $cutoff,
-        ]);
+        if ($this->supportsLoginKeyColumn($pdo)) {
+            $countStatement = $pdo->prepare(
+                'SELECT COUNT(*) AS failure_count
+                 FROM admin_login_logs
+                 WHERE login_key = :login_key AND is_success = 0 AND created_at > :cutoff'
+            );
+            $countStatement->execute([
+                'login_key' => $loginKey,
+                'cutoff' => $cutoff,
+            ]);
+        } else {
+            $ip = $this->requestIp();
+            $countStatement = $pdo->prepare(
+                'SELECT COUNT(*) AS failure_count
+                 FROM admin_login_logs
+                 WHERE username = :username AND login_ip = :login_ip AND is_success = 0 AND created_at > :cutoff'
+            );
+            $countStatement->execute([
+                'username' => $username,
+                'login_ip' => $ip,
+                'cutoff' => $cutoff,
+            ]);
+        }
         $countRow = $countStatement->fetch();
 
         if (!is_array($countRow) || (int) ($countRow['failure_count'] ?? 0) < $maxAttempts) {
             return;
         }
 
-        $lastStatement = $pdo->prepare(
-            'SELECT created_at
-             FROM admin_login_logs
-             WHERE login_key = :login_key AND is_success = 0
-             ORDER BY created_at DESC
-             LIMIT 1'
-        );
-        $lastStatement->execute(['login_key' => $loginKey]);
+        if ($this->supportsLoginKeyColumn($pdo)) {
+            $lastStatement = $pdo->prepare(
+                'SELECT created_at
+                 FROM admin_login_logs
+                 WHERE login_key = :login_key AND is_success = 0
+                 ORDER BY created_at DESC
+                 LIMIT 1'
+            );
+            $lastStatement->execute(['login_key' => $loginKey]);
+        } else {
+            $ip = $this->requestIp();
+            $lastStatement = $pdo->prepare(
+                'SELECT created_at
+                 FROM admin_login_logs
+                 WHERE username = :username AND login_ip = :login_ip AND is_success = 0
+                 ORDER BY created_at DESC
+                 LIMIT 1'
+            );
+            $lastStatement->execute([
+                'username' => $username,
+                'login_ip' => $ip,
+            ]);
+        }
         $lastRow = $lastStatement->fetch();
 
         if (!is_array($lastRow) || empty($lastRow['created_at'])) {
@@ -194,16 +225,45 @@ final class AuthService
             return;
         }
 
+        if ($this->supportsLoginKeyColumn($pdo)) {
+            $statement = $pdo->prepare(
+                'INSERT INTO admin_login_logs (username, login_key, login_ip, is_success, reason, created_at)
+                 VALUES (:username, :login_key, :ip, 0, :reason, NOW())'
+            );
+            $statement->execute([
+                'username' => $username,
+                'login_key' => $this->loginFailureKey($username),
+                'ip' => $this->requestIp(),
+                'reason' => 'login_failure',
+            ]);
+            return;
+        }
+
         $statement = $pdo->prepare(
-            'INSERT INTO admin_login_logs (username, login_key, login_ip, is_success, reason, created_at)
-             VALUES (:username, :login_key, :ip, 0, :reason, NOW())'
+            'INSERT INTO admin_login_logs (username, login_ip, is_success, reason, created_at)
+             VALUES (:username, :ip, 0, :reason, NOW())'
         );
         $statement->execute([
             'username' => $username,
-            'login_key' => $this->loginFailureKey($username),
             'ip' => $this->requestIp(),
             'reason' => 'login_failure',
         ]);
+    }
+
+    private function supportsLoginKeyColumn(\PDO $pdo): bool
+    {
+        if (self::$supportsLoginKey !== null) {
+            return self::$supportsLoginKey;
+        }
+
+        $statement = $pdo->query("SHOW COLUMNS FROM `admin_login_logs` LIKE 'login_key'");
+        if ($statement === false) {
+            self::$supportsLoginKey = false;
+            return false;
+        }
+
+        self::$supportsLoginKey = $statement->fetchColumn() !== false;
+        return self::$supportsLoginKey;
     }
 
     private function loginFailureKey(string $username): string
