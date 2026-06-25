@@ -13,6 +13,14 @@ final class DashboardRepository
 
     private ?string $queryEndDate = null;
 
+    private function visitorKeySql(string $column = 'session_code'): string
+    {
+        return "CASE
+            WHEN {$column} LIKE 'web-%-%' THEN SUBSTRING_INDEX({$column}, '-', 2)
+            ELSE {$column}
+        END";
+    }
+
     public function trafficSummary(string $range = '7d'): array
     {
         $days = $this->normalizeRangeDays($range);
@@ -25,7 +33,7 @@ final class DashboardRepository
 
         $statement = $pdo->prepare(
             "SELECT
-                COUNT(DISTINCT session_code) AS uv,
+                COUNT(DISTINCT {$this->visitorKeySql('session_code')}) AS uv,
                 COUNT(*) AS pv,
                 0 AS bounce_rate
              FROM visitor_events
@@ -51,7 +59,7 @@ final class DashboardRepository
         $statement = $pdo->prepare(
             "SELECT
                 DATE(visited_at) AS stat_date,
-                COUNT(DISTINCT session_code) AS uv,
+                COUNT(DISTINCT {$this->visitorKeySql('session_code')}) AS uv,
                 COUNT(*) AS pv
              FROM visitor_events
              WHERE {$dateSql}
@@ -74,11 +82,14 @@ final class DashboardRepository
         [$dateSql, $dateParams] = $this->dateCondition('visited_at', false, $days);
 
         $statement = $pdo->prepare(
-            "SELECT language_code AS country, COUNT(*) AS visits
+            "SELECT
+                NULLIF(TRIM(language_code), '') AS language_code,
+                COUNT(DISTINCT {$this->visitorKeySql('session_code')}) AS uv,
+                COUNT(*) AS pv
              FROM visitor_events
-             WHERE {$dateSql}
-             GROUP BY language_code
-             ORDER BY visits DESC
+             WHERE {$dateSql} AND NULLIF(TRIM(language_code), '') IS NOT NULL
+             GROUP BY NULLIF(TRIM(language_code), '')
+             ORDER BY uv DESC, pv DESC
              LIMIT 10"
         );
         foreach ($dateParams as $k => $v) {
@@ -97,17 +108,115 @@ final class DashboardRepository
         [$dateSql, $dateParams] = $this->dateCondition('visited_at', false, $days);
 
         $statement = $pdo->prepare(
-            "SELECT page, title, COUNT(*) AS visits
+            "SELECT
+                page AS landing_page,
+                title,
+                COUNT(DISTINCT {$this->visitorKeySql('session_code')}) AS uv,
+                COUNT(*) AS pv
              FROM visitor_events
              WHERE {$dateSql}
              GROUP BY page, title
-             ORDER BY visits DESC
+             ORDER BY uv DESC, pv DESC
              LIMIT 10"
         );
         foreach ($dateParams as $k => $v) {
             $statement->bindValue($k, $v);
         }
         $statement->execute();
+        return $statement->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public function contentUvSummary(string $range = '7d'): array
+    {
+        $days = $this->normalizeRangeDays($range);
+        $pdo = DatabaseManager::instance()->connection();
+        if (!($pdo instanceof \PDO)) {
+            return [
+                'product_uv' => 0,
+                'solution_uv' => 0,
+                'news_uv' => 0,
+                'case_uv' => 0,
+            ];
+        }
+
+        [$dateSql, $dateParams] = $this->dateCondition('visited_at', false, $days);
+
+        $statement = $pdo->prepare(
+            "SELECT
+                SUM(CASE WHEN content_type = 'product' THEN uv ELSE 0 END) AS product_uv,
+                SUM(CASE WHEN content_type = 'solution' THEN uv ELSE 0 END) AS solution_uv,
+                SUM(CASE WHEN content_type = 'news' THEN uv ELSE 0 END) AS news_uv,
+                SUM(CASE WHEN content_type = 'case' THEN uv ELSE 0 END) AS case_uv
+             FROM (
+                SELECT
+                    CASE
+                        WHEN page REGEXP '/products/[^/?#]+(\\\\.html)?/?$' THEN 'product'
+                        WHEN page REGEXP '/solutions/[^/?#]+(\\\\.html)?/?$' THEN 'solution'
+                        WHEN page REGEXP '/news/[^/?#]+(\\\\.html)?/?$' THEN 'news'
+                        WHEN page REGEXP '/cases/[^/?#]+(\\\\.html)?/?$' THEN 'case'
+                        ELSE ''
+                    END AS content_type,
+                    COUNT(DISTINCT {$this->visitorKeySql('session_code')}) AS uv
+                FROM visitor_events
+                WHERE {$dateSql}
+                GROUP BY page
+             ) AS content_uv
+             WHERE content_type <> ''"
+        );
+        foreach ($dateParams as $k => $v) {
+            $statement->bindValue($k, $v);
+        }
+        $statement->execute();
+        $row = $statement->fetch(\PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $row : [
+            'product_uv' => 0,
+            'solution_uv' => 0,
+            'news_uv' => 0,
+            'case_uv' => 0,
+        ];
+    }
+
+    public function contentTopPagesByType(string $type, string $range = '7d', int $limit = 5): array
+    {
+        $patterns = [
+            'product' => '/products/[^/?#]+(\\\\.html)?/?$',
+            'solution' => '/solutions/[^/?#]+(\\\\.html)?/?$',
+            'news' => '/news/[^/?#]+(\\\\.html)?/?$',
+            'case' => '/cases/[^/?#]+(\\\\.html)?/?$',
+        ];
+
+        $pattern = $patterns[$type] ?? null;
+        if ($pattern === null) {
+            return [];
+        }
+
+        $days = $this->normalizeRangeDays($range);
+        $pdo = DatabaseManager::instance()->connection();
+        if (!($pdo instanceof \PDO)) {
+            return [];
+        }
+
+        [$dateSql, $dateParams] = $this->dateCondition('visited_at', false, $days);
+        $safeLimit = max(1, min(20, $limit));
+        $statement = $pdo->prepare(
+            "SELECT
+                page AS landing_page,
+                title,
+                COUNT(DISTINCT {$this->visitorKeySql('session_code')}) AS uv,
+                COUNT(*) AS pv
+             FROM visitor_events
+             WHERE {$dateSql} AND page REGEXP :content_pattern
+             GROUP BY page, title
+             ORDER BY uv DESC, pv DESC
+             LIMIT {$safeLimit}"
+        );
+        foreach ($dateParams as $k => $v) {
+            $statement->bindValue($k, $v);
+        }
+        $statement->bindValue(':content_pattern', $pattern);
+        $statement->execute();
+
         return $statement->fetchAll(\PDO::FETCH_ASSOC) ?: [];
     }
 
@@ -610,7 +719,23 @@ final class DashboardRepository
         return should_prefer_runtime_storage([
             dirname(__DIR__, 2) . '/runtime/storage/conversations.json',
             dirname(__DIR__, 2) . '/runtime/storage/inquiries.json',
+            dirname(__DIR__, 2) . '/runtime/storage/visitor_events.json',
         ]);
+    }
+
+    private function hasTableColumn(\PDO $pdo, string $table, string $column): bool
+    {
+        static $cache = [];
+
+        $key = $table . '.' . $column;
+        if (array_key_exists($key, $cache)) {
+            return $cache[$key];
+        }
+
+        $statement = $pdo->prepare('SHOW COLUMNS FROM `' . str_replace('`', '``', $table) . '` LIKE :column');
+        $statement->execute(['column' => $column]);
+
+        return $cache[$key] = (bool) $statement->fetch();
     }
 
     /**

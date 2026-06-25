@@ -23,6 +23,7 @@ import MediaPickerModal from '@/components/MediaPickerModal';
 import PagePlaceholder from '@/components/PagePlaceholder';
 import LazyRichTextEditor from '@/components/LazyRichTextEditor';
 import TableSelectionFooter from '@/components/TableSelectionFooter';
+import CategoryQuickManager from '@/components/CategoryQuickManager';
 import { getResourceDetail } from '@/api/resources';
 import {
   batchDeleteSolutions,
@@ -125,6 +126,7 @@ export default function SolutionsPage() {
   const [manualPickerOpen, setManualPickerOpen] = useState(false);
   const [manualAsset, setManualAsset] = useState(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   const [form] = Form.useForm();
   const manualAssetId = Form.useWatch('manual_asset_id', form);
 
@@ -420,6 +422,12 @@ export default function SolutionsPage() {
       width: 90,
     },
     {
+      title: 'UV',
+      dataIndex: 'views_count',
+      width: 98,
+      render: (value) => Number(value || 0),
+    },
+    {
       title: '操作',
       key: 'actions',
       width: 300,
@@ -462,6 +470,13 @@ export default function SolutionsPage() {
           <div className="toolbar-surface">
             <Space wrap size={12} style={{ width: '100%', justifyContent: 'space-between' }}>
               <Space wrap size={12}>
+                <Button
+                  type="default"
+                  className="toolbar-quick-action"
+                  onClick={() => setCategoryManagerOpen(true)}
+                >
+                  分类管理
+                </Button>
                 <Input.Search
                   allowClear
                   placeholder="搜索解决方案名称"
@@ -592,6 +607,16 @@ export default function SolutionsPage() {
           />
         </Space>
       </PagePlaceholder>
+
+      <CategoryQuickManager
+        open={categoryManagerOpen}
+        onClose={() => setCategoryManagerOpen(false)}
+        onSaved={() => {
+          setCategoryManagerOpen(false);
+          loadLookups();
+        }}
+        entityType="solution"
+      />
 
       <Drawer
         title={editingId ? '编辑解决方案' : '新建解决方案'}

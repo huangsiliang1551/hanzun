@@ -22,6 +22,7 @@ import ContentWorkflowPanel from '@/components/ContentWorkflowPanel';
 import PagePlaceholder from '@/components/PagePlaceholder';
 import LazyRichTextEditor from '@/components/LazyRichTextEditor';
 import TableSelectionFooter from '@/components/TableSelectionFooter';
+import CategoryQuickManager from '@/components/CategoryQuickManager';
 import {
   batchDeleteNews,
   batchUpdateNewsPublishStatus,
@@ -98,6 +99,7 @@ export default function NewsPage() {
   const [currentDetail, setCurrentDetail] = useState(null);
   const [currentWorkflow, setCurrentWorkflow] = useState(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   const [form] = Form.useForm();
 
   const categoryTreeOptions = useMemo(() => buildTreeOptions(categories), [categories]);
@@ -348,7 +350,7 @@ export default function NewsPage() {
       render: (value) => (Number(value || 0) === 1 ? <Tag color="blue">是</Tag> : '否'),
     },
     {
-      title: '浏览量',
+      title: 'UV',
       dataIndex: 'views_count',
       width: 100,
     },
@@ -403,6 +405,13 @@ export default function NewsPage() {
           <div className="toolbar-surface">
             <Space wrap size={12} style={{ width: '100%', justifyContent: 'space-between' }}>
               <Space wrap size={12}>
+                <Button
+                  type="default"
+                  className="toolbar-quick-action"
+                  onClick={() => setCategoryManagerOpen(true)}
+                >
+                  分类管理
+                </Button>
                 <Input.Search
                   allowClear
                   placeholder="搜索新闻标题"
@@ -509,6 +518,16 @@ export default function NewsPage() {
           />
         </Space>
       </PagePlaceholder>
+
+      <CategoryQuickManager
+        open={categoryManagerOpen}
+        onClose={() => setCategoryManagerOpen(false)}
+        onSaved={() => {
+          setCategoryManagerOpen(false);
+          loadLookups();
+        }}
+        entityType="news"
+      />
 
       <Drawer
         title={editingId ? '编辑新闻' : '新建新闻'}
