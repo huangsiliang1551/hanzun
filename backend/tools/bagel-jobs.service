@@ -1,0 +1,40 @@
+[Unit]
+Description=Bagel CMS Async Job Processor (Translation & SEO)
+Documentation=https://bagelsmachinery.com
+After=network.target network-online.target mysql.service mysqld.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www
+Group=www
+WorkingDirectory=/www/wwwroot/bagelsmachinery.com/backend
+ExecStart=/usr/bin/php tools/process-jobs-daemon.php
+ExecStop=/bin/kill -s TERM $MAINPID
+
+# 自动重启（AI API 偶尔超时）
+Restart=always
+RestartSec=5
+
+# 防止无限重启循环
+StartLimitInterval=600
+StartLimitBurst=10
+
+# 日志
+StandardOutput=append:/www/wwwroot/bagelsmachinery.com/backend/runtime/daemon.log
+StandardError=append:/www/wwwroot/bagelsmachinery.com/backend/runtime/daemon-error.log
+
+# 安全加固
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/www/wwwroot/bagelsmachinery.com/backend/runtime /tmp
+ReadOnlyPaths=/www/wwwroot/bagelsmachinery.com
+
+# 资源限制
+MemoryMax=256M
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target

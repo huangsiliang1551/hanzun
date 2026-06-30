@@ -1,0 +1,111 @@
+﻿<!DOCTYPE html>
+<!--
+  涵尊实业企业网站 - 首页模板
+  结构：head -> body(page-glow + header + main[hero+模块] + footer[CTA+品牌] + floating + dock + 弹窗)
+  样式：future.css（桌面）+ future-mobile.css（移动覆盖）
+  脚本：{{public_scripts_html}} 按页面类型注入（首页 5 个，非首页 1 个）
+  占位符：{{xxx}} 由 StaticPublisher 替换为实际内容
+-->
+<html lang="zh-CN" prefix="og: https://ogp.me/ns#" data-hydrating>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上海涵尊实业有限公司 | 烘焙机械研发定制与整线交付</title>
+    <meta id="meta-description" name="description" content="{{meta_description_zh}}">
+    <meta id="meta-keywords" name="keywords" content="{{meta_keywords}}">
+    <meta property="og:title" content="{{og_title_zh}}">
+    <meta property="og:description" content="{{og_description_zh}}">
+    <meta property="og:image" content="{{og_image_url}}">
+    <meta property="og:url" content="{{canonical_url}}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{site_name}}">
+    <link rel="icon" type="image/png" href="assets/images/common/logo-110.png">
+    <link rel="canonical" href="{{canonical_url}}">
+    <link rel="preload" as="image" href="/assets/images/home/hero-first-frame.webp" fetchpriority="high">
+    <link rel="stylesheet" href="assets/css/future.css?v=20260629-11">
+    <link rel="stylesheet" href="assets/css/future-mobile.css?v=20260629-11">
+</head>
+<body data-lang="zh">
+    <div class="page-glow glow-a"></div>
+    <div class="page-glow glow-b"></div>
+    <!-- AI 咨询窗口（WhatsApp 风格） -->
+    <div class="support-panel" hidden data-support-panel>
+        <div class="support-window" role="dialog" aria-modal="true" aria-label="AI 咨询窗口">
+            <header class="support-header">
+                <div class="support-header-info">
+                    <div class="support-header-avatar" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.77.46 3.43 1.27 4.87L2 22l5.13-1.27C8.57 21.54 10.23 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.66 0-3.22-.45-4.56-1.24l-.33-.2-3.04.76.76-3.04-.2-.33C3.45 15.22 3 13.66 3 12c0-4.96 4.04-9 9-9s9 4.04 9 9-4.04 9-9 9z" fill="currentColor"/><path d="M8.5 9c-.83 0-1.5.67-1.5 1.5S7.67 12 8.5 12s1.5-.67 1.5-1.5S9.33 9 8.5 9zm7 0c-.83 0-1.5.67-1.5 1.5S14.67 12 15.5 12s1.5-.67 1.5-1.5S16.33 9 15.5 9z" fill="currentColor"/></svg>
+                    </div>
+                    <div class="support-header-text">
+                        <strong data-zh="涵尊 AI 助手" data-en="Hanzun AI Support">涵尊 AI 助手</strong>
+                        <span class="support-header-status">
+                            <i class="support-online-dot"></i>
+                            <span data-zh="在线" data-en="Online">在线</span>
+                        </span>
+                    </div>
+                </div>
+                <button class="support-close-btn" type="button" aria-label="Close" data-support-close>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"/></svg>
+                </button>
+            </header>
+            <div class="support-conversation" data-support-messages>
+                <div class="support-date-divider"><span data-zh="今天" data-en="Today">今天</span></div>
+                <article class="support-message support-message-assistant">
+                    <div class="support-bubble">
+                        <p data-zh="您好，欢迎咨询涵尊烘焙设备。您可以直接询问设备、整线方案、交期、报价，也可以留下联系方式和需求，我们会由 AI 持续为您解答。" data-en="Hello! Ask about equipment, line solutions, lead times, and quotations. You can also leave your contact details and requirements.">您好，欢迎咨询涵尊烘焙设备。您可以直接询问设备、整线方案、交期、报价，也可以留下联系方式和需求，我们会由 AI 持续为您解答。</p>
+                    </div>
+                </article>
+            </div>
+            <div class="support-suggestions" data-support-suggestions>
+                <button type="button" data-support-prompt="我想咨询蛋糕生产线" data-zh="蛋糕产线" data-en="Cake Lines" data-zh-prompt="我想咨询蛋糕生产线" data-en-prompt="I want to ask about cake production lines.">蛋糕产线</button>
+                <button type="button" data-support-prompt="我想了解设备交期" data-zh="设备交期" data-en="Lead Time" data-zh-prompt="我想了解设备交期" data-en-prompt="I want to know the equipment lead time.">设备交期</button>
+                <button type="button" data-support-prompt="我需要整线报价" data-zh="整线报价" data-en="Line Quotation" data-zh-prompt="我需要整线报价" data-en-prompt="I need a quotation for a complete line.">整线报价</button>
+            </div>
+            <form class="support-composer" data-support-form>
+                <p class="support-composer-status" data-support-status hidden></p>
+                <div class="support-composer-row">
+                    <textarea rows="1" placeholder="请输入您的问题" data-support-input data-zh-placeholder="请输入您的问题" data-en-placeholder="Type a message"></textarea>
+                    <button type="submit" data-support-submit aria-label="Send">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z" fill="currentColor"/></svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- 微信二维码弹窗 -->
+    <div class="wechat-panel" hidden data-wechat-panel>
+        <button class="wechat-panel-backdrop" type="button" aria-label="Close WeChat panel" data-wechat-close></button>
+        <div class="wechat-card" role="dialog" aria-modal="true" aria-label="WeChat QR code">
+            <button class="wechat-card-close" type="button" aria-label="Close WeChat panel" data-wechat-close>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/>
+                </svg>
+            </button>
+            <div class="wechat-card-head">
+                <strong data-zh="微信" data-en="WeChat">微信</strong>
+                <span data-zh="扫码添加或复制微信号" data-en="Scan the code or copy the WeChat ID">扫码添加或复制微信号</span>
+            </div>
+            <figure class="wechat-qr">
+                <img src="assets/images/common/wechat-qr.png" alt="Hanzun WeChat QR code" loading="lazy" decoding="async" data-progressive-media>
+            </figure>
+            <div class="wechat-id">
+                <span data-zh="微信号" data-en="WeChat ID">微信号</span>
+                <strong data-wechat-id>15216813602</strong>
+            </div>
+            <button class="wechat-copy" type="button" data-wechat-copy data-copy-value="15216813602">
+                <span data-zh="复制微信号" data-en="Copy WeChat ID">复制微信号</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- marked.js (AI 回复 Markdown 渲染) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+
+    <!-- 前台 JS（按页面类型注入） -->
+    {{public_scripts_html}}
+</body>
+</html>
+
+
+
+

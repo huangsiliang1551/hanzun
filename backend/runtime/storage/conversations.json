@@ -1,0 +1,48 @@
+﻿[
+  {
+    "id": 8,
+    "session_id": 8,
+    "session_code": "sess-storage-check",
+    "source": "ai",
+    "source_page": "/en/products/cake-line",
+    "entry_language": "en",
+    "resolved_language": "en",
+    "country_code": "AE",
+    "device_type": "desktop",
+    "utm_source": "google",
+    "is_valid_conversation": 1,
+    "inquiry_id": 18,
+    "last_message_at": "2026-06-29 16:55:26",
+    "created_at": "2026-06-29 16:55:26",
+    "updated_at": "2026-06-29 16:55:26",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Need cake line",
+        "created_at": "2026-06-29 16:55:26",
+        "message_language": "en",
+        "translated_text": "",
+        "intent_code": "product_consulting",
+        "contains_contact_info": 0,
+        "extracted_entities_json": {
+          "product_interest": "Cake line"
+        }
+      }
+    ],
+    "snapshots": [
+      {
+        "contact_name": "Daniel",
+        "company_name": "Daniel Foods",
+        "email": "daniel@example.com",
+        "phone": "",
+        "whatsapp": "",
+        "country_code": "AE",
+        "product_interest": "Cake line",
+        "solution_interest": "Cake production line",
+        "requirement_summary": "Need quotation",
+        "confidence_score": 78,
+        "created_at": "2026-06-29 16:55:26"
+      }
+    ]
+  }
+]

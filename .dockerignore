@@ -1,0 +1,15 @@
+.git
+.agents
+.backup
+.codex
+.github
+node_modules
+admin-v2
+outputs
+.deploy_sync
+*.log
+*.tar.gz
+*.zip
+*.bak
+NUL
+backend/runtime

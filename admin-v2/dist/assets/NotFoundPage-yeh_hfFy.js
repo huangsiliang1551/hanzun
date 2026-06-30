@@ -1,0 +1,1 @@
+import{at as o,j as t,av as e,B as s}from"./index-Dpz5eVW6.js";function r(){const a=o();return t.jsx(e,{status:"404",title:"Page not found",subTitle:"This route is not configured yet. Return to the dashboard to continue integration.",extra:t.jsx(s,{type:"primary",onClick:()=>a("/dashboard"),children:"Go to dashboard"})})}export{r as default};

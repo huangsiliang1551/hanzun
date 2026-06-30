@@ -1,0 +1,54 @@
+services:
+  db:
+    image: m.daocloud.io/docker.io/mysql:8.0
+    container_name: hanzun-test-db
+    restart: unless-stopped
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: Aa32156765
+      MYSQL_DATABASE: hanzun_cms
+      MYSQL_USER: hanzun
+      MYSQL_PASSWORD: Aa32156765
+    volumes:
+      - hanzun_test_db_data:/var/lib/mysql
+      - ./local_db.sql:/docker-entrypoint-initdb.d/01-local_db.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pAa32156765"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: hanzun-test-app
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./:/var/www/html
+      - ./backend/.env.docker-test:/var/www/html/backend/.env:ro
+      - ./uploads:/var/www/html/backend/public/uploads
+
+  web:
+    image: m.daocloud.io/docker.io/nginx:1.27-alpine
+    container_name: hanzun-test-web
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "18081:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./uploads:/var/www/html/backend/public/uploads
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  hanzun_test_db_data:

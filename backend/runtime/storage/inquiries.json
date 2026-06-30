@@ -1,0 +1,45 @@
+﻿[
+  {
+    "id": 18,
+    "session_id": 8,
+    "source": "ai",
+    "primary_contact_type": "email",
+    "primary_contact_value": "daniel@example.com",
+    "customer_name": "Daniel",
+    "company_name": "Daniel Foods",
+    "country_code": "AE",
+    "language_code": "en",
+    "product_interest": "Cake line",
+    "solution_interest": "Cake production line",
+    "requirement_summary": "Need quotation",
+    "inquiry_score": 78,
+    "status": "new",
+    "assigned_to": null,
+    "first_response_at": null,
+    "browse_traces": [
+      {
+        "page": "/en/products/cake-line",
+        "title": "Cake Line",
+        "referrer": "https://example.com",
+        "visited_at": "2026-06-29 16:55:26",
+        "language_code": "en"
+      }
+    ],
+    "change_logs": [
+      {
+        "field": "status",
+        "from": "new",
+        "to": "new",
+        "changed_at": "2026-06-29 16:55:26"
+      }
+    ],
+    "follow_ups": [
+      {
+        "content": "AI created inquiry automatically",
+        "created_at": "2026-06-29 16:55:26"
+      }
+    ],
+    "created_at": "2026-06-29 16:55:26",
+    "updated_at": "2026-06-29 16:55:26"
+  }
+]

@@ -1,0 +1,43 @@
+CREATE TABLE IF NOT EXISTS `site_build_jobs` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `scope` VARCHAR(32) NOT NULL DEFAULT 'incremental',
+  `trigger_source` VARCHAR(64) NOT NULL DEFAULT 'manual',
+  `entity_type` VARCHAR(64) DEFAULT NULL,
+  `entity_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `language_codes_json` JSON DEFAULT NULL,
+  `context_json` JSON DEFAULT NULL,
+  `status` VARCHAR(32) NOT NULL DEFAULT 'queued',
+  `total_steps` INT NOT NULL DEFAULT 0,
+  `completed_steps` INT NOT NULL DEFAULT 0,
+  `progress_percent` INT NOT NULL DEFAULT 0,
+  `current_step` VARCHAR(64) DEFAULT 'queued',
+  `error_message` VARCHAR(500) DEFAULT NULL,
+  `output_summary_json` JSON DEFAULT NULL,
+  `created_by` VARCHAR(128) DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `started_at` DATETIME DEFAULT NULL,
+  `finished_at` DATETIME DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_site_build_jobs_status` (`status`),
+  KEY `idx_site_build_jobs_entity` (`entity_type`, `entity_id`),
+  KEY `idx_site_build_jobs_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `site_build_job_items` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `job_id` BIGINT UNSIGNED NOT NULL,
+  `language_code` VARCHAR(8) NOT NULL DEFAULT '',
+  `page_type` VARCHAR(64) NOT NULL DEFAULT '',
+  `route` VARCHAR(255) NOT NULL DEFAULT '',
+  `output_file` VARCHAR(500) NOT NULL DEFAULT '',
+  `status` VARCHAR(32) NOT NULL DEFAULT 'queued',
+  `error_message` TEXT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_site_build_job_items_job` (`job_id`),
+  KEY `idx_site_build_job_items_status` (`status`),
+  KEY `idx_site_build_job_items_route` (`route`(191)),
+  KEY `idx_site_build_job_items_job_status` (`job_id`, `status`),
+  CONSTRAINT `fk_site_build_job_items_job` FOREIGN KEY (`job_id`) REFERENCES `site_build_jobs` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
