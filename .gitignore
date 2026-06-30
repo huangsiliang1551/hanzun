@@ -1,0 +1,12 @@
+# Remote workspace operational artifacts
+.restore-snapshots/
+.workbuddy/file-snapshot*.txt
+
+# Local backup artifacts created during server-side debugging
+*.bak
+*.bak-*
+*.pre-restore-*
+
+# Temporary archives
+*.tar
+*.tar.gz
