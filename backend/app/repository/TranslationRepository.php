@@ -60,7 +60,7 @@ final class TranslationRepository
     /** @deprecated — per-language lookup not needed with JSON column */
     public function findByEntity(string $entityType, int $entityId, string $languageCode): ?array
     {
-        return $this->findByEntity($entityType, $entityId);
+        return $this->findEntityJob($entityType, $entityId);
     }
 
     /**

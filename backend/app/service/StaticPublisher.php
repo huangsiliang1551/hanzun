@@ -1270,7 +1270,7 @@ HTML;
         $about = $this->cachedAbout($languageCode);
         $intro = trim((string) ($this->extractAboutIntro($about) ?: ($site['meta_description'] ?? '')));
         $heroImage = trim((string) ($site['hero_image_url'] ?? '')) !== '' ? (string) $site['hero_image_url'] : '/assets/videos/home/hero-enterprise-showcase.webm';
-        
+
         // Pull real backend data, filter by is_home_featured + has cover image
         $products = $this->filterHomeFeaturedWithCover($this->cachedCollectionItems('product', $languageCode));
         $solutions = $this->filterHomeFeaturedWithCover($this->cachedCollectionItems('solution', $languageCode));
@@ -2499,7 +2499,7 @@ HTML;
      */
     private function renderPublicScriptsHtml(string $route): string
     {
-        $version = '20260630-04';
+        $version = '20260701-ai26';
         $isHomepage = (bool) preg_match('#^/[a-z]{2}/(index\.html)?$#i', $route);
 
         $scripts = [
@@ -3328,6 +3328,8 @@ HTML;
 HTML;
     }
 
+
+
     private function renderFloatingContactsV2(string $languageCode): string
     {
         $emailContacts = $this->collectScopedContacts($languageCode, ['floating_contact'], ['email']);
@@ -3336,29 +3338,29 @@ HTML;
         $addressContacts = $this->collectScopedContacts($languageCode, ['floating_contact'], ['address']);
         $emailGroup = $this->renderFloatingChooserGroup(
             'email',
-            $this->phrase('contact_email', $languageCode, 'Email'),
-            $this->phrase('contact_email_hint', $languageCode, 'Tap to choose an email'),
+            $this->phrase('floating_email', $languageCode, 'Business Email'),
+            $this->phrase('floating_email_hint', $languageCode, 'Show email address'),
             '<svg viewBox="0 0 24 24"><path d="M4.2 6.8h15.6a1.2 1.2 0 0 1 1.2 1.2v8a1.8 1.8 0 0 1-1.8 1.8H4.8A1.8 1.8 0 0 1 3 16V8a1.2 1.2 0 0 1 1.2-1.2Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"/><path d="m4.3 8 7 5 8.4-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"/></svg>',
             $emailContacts
         );
         $phoneGroup = $this->renderFloatingChooserGroup(
             'phone',
-            $this->phrase('contact_phone', $languageCode, 'Phone'),
-            $this->phrase('contact_phone_hint', $languageCode, 'Tap to choose a phone number'),
+            $this->phrase('floating_phone', $languageCode, 'Factory Line'),
+            $this->phrase('floating_phone_hint', $languageCode, 'Show phone number'),
             '<svg viewBox="0 0 24 24"><path d="M12 3.2a8.8 8.8 0 0 0-7.6 13.2L3 21l4.8-1.3A8.8 8.8 0 1 0 12 3.2Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"/><path d="M9.2 8.7c-.2-.4-.4-.4-.7-.4h-.6c-.2 0-.5.1-.7.4-.2.3-.8.9-.8 2.1 0 1.1.8 2.2.9 2.4.1.1 1.6 2.6 4 3.5 1.9.7 2.3.6 2.7.6.4-.1 1.4-.6 1.6-1.2.2-.6.2-1 .1-1.1-.1-.1-.4-.2-.8-.4s-1.1-.5-1.2-.5c-.2-.1-.4-.1-.6.2-.2.3-.7.9-.8 1-.1.2-.3.2-.6.1a6.7 6.7 0 0 1-3.3-3c-.2-.3 0-.5.1-.6.1-.1.3-.4.5-.6.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.4-1.1-.6-1.5Z" fill="currentColor"/></svg>',
             $phoneContacts
         );
         $whatsappLink = $this->renderFloatingDirectLink(
             'whatsapp',
-            $this->phrase('contact_whatsapp', $languageCode, 'WhatsApp'),
-            $this->phrase('contact_whatsapp_hint', $languageCode, 'Open WhatsApp chat'),
+            $this->phrase('floating_whatsapp', $languageCode, 'WhatsApp'),
+            $this->phrase('floating_whatsapp_hint', $languageCode, 'Start a quick chat'),
             '<svg viewBox="0 0 24 24"><path d="M12 3.2a8.8 8.8 0 0 0-7.6 13.2L3 21l4.4-1.2a8.8 8.8 0 1 0 4.6-16.6Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"/><path d="M9.4 8.8c-.2-.4-.4-.4-.7-.4h-.5c-.2 0-.5.1-.7.4-.2.3-.7.9-.7 2 0 1 .7 2.1.8 2.2.1.1 1.5 2.4 3.7 3.2 1.7.7 2.1.6 2.5.6.4-.1 1.3-.5 1.5-1.1.2-.5.2-.9.1-1s-.4-.2-.7-.4c-.4-.2-1-.5-1.2-.5-.2-.1-.4-.1-.5.2-.2.3-.6.8-.8.9-.1.2-.3.2-.5.1a6.1 6.1 0 0 1-3-2.7c-.2-.3 0-.4.1-.5.1-.1.3-.4.4-.5.1-.2.2-.3.2-.5.1-.1 0-.3 0-.4 0-.1-.3-1-.5-1.4Z" fill="currentColor"/></svg>',
             $whatsappContacts[0] ?? null
         );
         $addressLink = $this->renderFloatingDirectLink(
             'address',
-            $this->phrase('contact_address', $languageCode, 'Address'),
-            $this->phrase('contact_address_hint', $languageCode, 'Factory contact details'),
+            $this->phrase('floating_address', $languageCode, 'Factory Address'),
+            $this->phrase('floating_address_hint', $languageCode, 'Open contact page'),
             '<svg viewBox="0 0 24 24"><path d="M12 4.2c-4.7 0-8.4 3-8.4 6.9 0 3.5 2.9 6.4 6.8 6.8l-.3 2.8 2.9-2.6h.2c4.1-.3 7.2-3.3 7.2-7 0-3.9-3.7-6.9-8.4-6.9Z" fill="currentColor"/><path d="M8.1 9.4v4.8h2.6M11.8 9.4v4.8M15.8 9.4h-2.4v4.8h2.4M13.4 11.8h1.9" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4"/></svg>',
             $addressContacts[0] ?? null
         );
@@ -3366,26 +3368,26 @@ HTML;
         return <<<HTML
 <div class="floating-contact" aria-label="{$this->escape($this->phrase('floating_contact', $languageCode, 'Contact'))}" data-contact-fab>
     <div class="floating-menu" data-contact-menu>
-        <button class="float-link support-chat" type="button" aria-label="{$this->escape($this->phrase('support_title', $languageCode, 'Online Support'))}" data-support-trigger>
+        <button class="float-link support-chat" type="button" aria-label="{$this->escape($this->phrase('floating_ai_title', $languageCode, 'AI Consult'))}" data-support-trigger>
             <span class="float-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M12 4.2a7.8 7.8 0 0 0-7.8 7.8v3.8a2 2 0 0 0 2 2h1.6v-6.2H6.1a6 6 0 0 1 11.8 0h-1.7v6.2h1.6a2 2 0 0 0 2-2V12A7.8 7.8 0 0 0 12 4.2Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"/><path d="M9.6 18.2c.5.5 1.4.8 2.4.8 1.6 0 2.8-.7 3.4-1.8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.7"/></svg>
             </span>
-            <span class="float-copy"><strong>{$this->escape($this->phrase('support_title', $languageCode, 'Support'))}</strong><small>{$this->escape($this->phrase('support_online_chat', $languageCode, 'Online chat'))}</small></span>
+            <span class="float-copy"><strong>{$this->escape($this->phrase('floating_ai_title', $languageCode, 'AI Consult'))}</strong><small>{$this->escape($this->phrase('floating_ai_hint', $languageCode, 'Machine matching, solution discussion, and quotations'))}</small></span>
         </button>
         {$emailGroup}
         {$phoneGroup}
         {$whatsappLink}
         {$addressLink}
     </div>
-    <button class="floating-trigger" type="button" data-contact-trigger aria-expanded="false" aria-label="{$this->escape($this->phrase('floating_contact_hint', $languageCode, 'Tap to open contact options'))}">
+    <button class="floating-trigger" type="button" data-contact-trigger aria-expanded="false" aria-label="{$this->escape($this->phrase('floating_contact_trigger_title', $languageCode, 'AI Consult'))}">
+        <span class="floating-trigger-badge" aria-hidden="true">1</span>
         <span class="floating-trigger-icon">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.4 12a7.6 7.6 0 0 1 15.2 0v3.1a1.9 1.9 0 0 1-1.9 1.9h-1.6v-5.8h2A5.7 5.7 0 0 0 6.3 11.2h1.9V17H6.3a1.9 1.9 0 0 1-1.9-1.9Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"/><path d="M10.2 18.3c.4.4 1.1.7 1.9.7 1.3 0 2.2-.5 2.8-1.4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.7"/></svg>
         </span>
-        <span class="floating-trigger-copy"><strong>{$this->escape($this->phrase('floating_contact', $languageCode, 'Contact'))}</strong><small>{$this->escape($this->phrase('floating_contact_hint', $languageCode, 'Tap to open contact options'))}</small></span>
+        <span class="floating-trigger-copy"><strong>{$this->escape($this->phrase('floating_contact_trigger_title', $languageCode, 'AI Consult'))}</strong><small>{$this->escape($this->phrase('floating_contact_trigger_hint', $languageCode, 'Tap to open contact options'))}</small></span>
     </button>
     <button class="back-to-top" type="button" data-back-to-top aria-label="{$this->escape($this->phrase('back_to_top', $languageCode, 'TOP'))}">
         <span class="back-to-top-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 18V6M7 11l5-5 5 5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></svg></span>
-        <span class="back-to-top-copy"><strong>{$this->escape($this->phrase('back_to_top', $languageCode, 'TOP'))}</strong></span>
     </button>
 </div>
 HTML;
@@ -4534,6 +4536,21 @@ HTML;
                 'footer_popular_solutions' => $zh('\u70ed\u95e8\u65b9\u6848'),
                 'floating_contact' => $zh('\u8054\u7cfb\u65b9\u5f0f'),
                 'floating_contact_hint' => $zh('\u70b9\u51fb\u6253\u5f00\u8054\u7cfb\u65b9\u5f0f'),
+                'floating_menu_title' => $zh('\u667a\u80fd\u54a8\u8be2'),
+                'floating_menu_intro' => $zh('\u4f18\u5148\u901a\u8fc7 AI \u54a8\u8be2\u4ea7\u54c1\u3001\u65b9\u6848\u4e0e\u62a5\u4ef7\uff0c\u5176\u4ed6\u8054\u7cfb\u65b9\u5f0f\u4f5c\u4e3a\u8865\u5145\u3002'),
+                'floating_menu_other' => $zh('\u5176\u4ed6\u8054\u7cfb\u65b9\u5f0f'),
+                'floating_ai_title' => $zh('AI\u54a8\u8be2'),
+                'floating_ai_hint' => $zh('\u4ea7\u54c1\u9009\u578b\u3001\u65b9\u6848\u6c9f\u901a\u3001\u62a5\u4ef7\u54a8\u8be2'),
+                'floating_contact_trigger_title' => $zh('AI\u54a8\u8be2'),
+                'floating_contact_trigger_hint' => $zh('\u70b9\u51fb\u5c55\u5f00\u8054\u7cfb\u65b9\u5f0f'),
+                'floating_email' => $zh('\u5546\u52a1\u90ae\u7bb1'),
+                'floating_email_hint' => $zh('\u70b9\u51fb\u67e5\u770b\u90ae\u7bb1\u5730\u5740'),
+                'floating_phone' => $zh('\u5de5\u5382\u603b\u673a'),
+                'floating_phone_hint' => $zh('\u70b9\u51fb\u67e5\u770b\u8054\u7cfb\u7535\u8bdd'),
+                'floating_whatsapp' => 'WhatsApp',
+                'floating_whatsapp_hint' => $zh('\u6253\u5f00 WhatsApp \u5bf9\u8bdd'),
+                'floating_address' => $zh('\u5de5\u5382\u5730\u5740'),
+                'floating_address_hint' => $zh('\u6253\u5f00\u8054\u7cfb\u9875\u9762'),
                 'html_sitemap' => $zh('\u7ad9\u70b9\u5730\u56fe'),
                 'detail_status' => $zh('\u72b6\u6001'),
                 'detail_date' => $zh('\u53d1\u5e03\u65f6\u95f4'),
@@ -4604,6 +4621,21 @@ HTML;
                 'footer_popular_solutions' => 'Popular Solutions',
                 'floating_contact' => 'Contact',
                 'floating_contact_hint' => 'Tap to open contact options',
+                'floating_menu_title' => 'AI Consult',
+                'floating_menu_intro' => 'Start with AI for products, solutions, and quotations. Other contact methods stay available as backup.',
+                'floating_menu_other' => 'Other contact methods',
+                'floating_ai_title' => 'AI Consult',
+                'floating_ai_hint' => 'Machine matching, solution discussion, and quotations',
+                'floating_contact_trigger_title' => 'AI Consult',
+                'floating_contact_trigger_hint' => 'Tap to open contact options',
+                'floating_email' => 'Business Email',
+                'floating_email_hint' => 'Show email address',
+                'floating_phone' => 'Factory Line',
+                'floating_phone_hint' => 'Show phone number',
+                'floating_whatsapp' => 'WhatsApp',
+                'floating_whatsapp_hint' => 'Start a quick chat',
+                'floating_address' => 'Factory Address',
+                'floating_address_hint' => 'Open contact page',
                 'html_sitemap' => 'Site Map',
                 'detail_status' => 'Status',
                 'detail_date' => 'Published',
@@ -4655,6 +4687,7 @@ HTML;
                 'copyright_suffix' => 'All rights reserved.',
             ],
         ];
+
 
         return $overrides[$languageCode][$key] ?? null;
     }
@@ -5728,6 +5761,3 @@ HTML;
         return (int) floor(($completed / $total) * 100);
     }
 }
-
-
-

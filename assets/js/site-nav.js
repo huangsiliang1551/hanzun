@@ -1096,6 +1096,14 @@
         });
     }
 
+    R.resolveContentTitle = resolveContentTitle;
+    R.resolveContentSummary = resolveContentSummary;
+    R.resolveContentImage = resolveContentImage;
+    R.resolveFallbackImage = resolveFallbackImage;
+    R.buildStaticPublicHref = buildStaticPublicHref;
+    R.mapStaticPublicHref = mapStaticPublicHref;
+    R.resolvePublicHref = resolvePublicHref;
+
     applyMegaNavInlineEnhancements();
 
     /* ───────────────────────── 启动 ───────────────────────── */

@@ -5588,3 +5588,1734 @@ body[data-lang="enEN"] .service-support-copy h2 {
     inset: 0 !important;
     z-index: 2 !important;
 }
+
+
+/* --- Codex regression fixes: support panel, floating contact, showcase, footer, menu --- */
+.support-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 180;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    pointer-events: none;
+}
+.support-panel-backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(7, 19, 31, 0.58);
+    pointer-events: auto;
+}
+.support-dialog {
+    position: relative;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    width: min(420px, calc(100vw - 32px));
+    height: min(680px, calc(100vh - 104px));
+    margin: 0 24px 88px 0;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+    background: #ece5dd;
+}
+.support-dialog-head {
+    display: grid;
+    gap: 4px;
+    padding: 18px 20px 16px;
+    background: #10263c;
+    color: #fff;
+    flex-shrink: 0;
+}
+.support-dialog-head strong {
+    font-size: 17px;
+    line-height: 1.2;
+}
+.support-dialog-head span {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 12px;
+    line-height: 1.45;
+}
+.support-dialog-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    cursor: pointer;
+}
+.support-dialog-close:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+.support-composer textarea:disabled {
+    opacity: 1;
+    cursor: text;
+}
+@media (max-width: 960px) {
+    .support-panel {
+        align-items: stretch;
+        justify-content: stretch;
+    }
+    .support-dialog {
+        width: 100vw;
+        height: 100dvh;
+        max-height: 100dvh;
+        margin: 0;
+        border-radius: 0;
+    }
+    .support-dialog-head {
+        padding-right: 60px;
+    }
+}
+
+.footer-brand-contact {
+    grid-template-columns: var(--footer-contact-icon-width) max-content minmax(0, 1fr);
+}
+.footer-brand-contact-label,
+.footer-brand-contact small {
+    width: auto;
+    min-width: 0;
+}
+.footer-brand-contact-value,
+.footer-brand-contact strong {
+    min-width: 0;
+}
+@media (max-width: 960px) {
+    .footer-brand-row-phone-whatsapp {
+        grid-template-columns: 1fr;
+    }
+    .footer-brand-contact {
+        grid-template-columns: 18px minmax(0, 1fr);
+        gap: 8px 10px;
+    }
+    .footer-brand-contact-label,
+    .footer-brand-contact small {
+        grid-column: 2;
+    }
+    .footer-brand-contact-value,
+    .footer-brand-contact strong {
+        grid-column: 2;
+    }
+    .footer-brand-socials {
+        padding-left: 28px;
+    }
+}
+
+.showcase-feature-card {
+    position: relative !important;
+    display: block !important;
+}
+.showcase-feature-media {
+    aspect-ratio: 4 / 3;
+    min-height: 100%;
+}
+.showcase-feature-copy {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    padding: 28px 22px 20px !important;
+    color: #fff !important;
+    background: linear-gradient(180deg, rgba(8, 20, 32, 0) 0%, rgba(8, 20, 32, 0.86) 72%, rgba(8, 20, 32, 0.96) 100%);
+}
+.showcase-feature-copy h3 {
+    color: #fff !important;
+    text-align: left !important;
+}
+.showcase-feature-copy .showcase-kicker,
+.showcase-mini-copy .showcase-kicker {
+    display: none !important;
+}
+.showcase-mini-card {
+    grid-template-rows: minmax(0, 1fr) auto !important;
+}
+.showcase-mini-media {
+    aspect-ratio: 4 / 3 !important;
+    background: #dbe7f2;
+}
+.showcase-mini-copy {
+    padding: 12px 12px 14px !important;
+}
+.showcase-mini-copy h3 {
+    text-align: center !important;
+}
+
+.section-cases .section-heading,
+.section-news .section-heading,
+.section-sales .section-heading {
+    text-align: center !important;
+    margin-bottom: 28px !important;
+}
+.section-cases .section-heading h2,
+.section-news .section-heading h2,
+.section-sales .section-heading h2,
+.case-hero-title,
+.news-card h3 {
+    text-align: center !important;
+}
+.case-hero-title {
+    margin-top: 14px !important;
+    margin-bottom: 10px !important;
+}
+.sales-name-bar,
+.sales-name-bar strong,
+.sales-card h3 {
+    text-align: center !important;
+    justify-content: center !important;
+}
+
+@media (min-width: 961px) {
+    .floating-contact:hover .floating-menu,
+    .floating-contact.open .floating-menu {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        transform: translateY(0) !important;
+    }
+    .floating-contact .float-link,
+    .floating-contact .float-link-toggle,
+    .floating-contact .back-to-top {
+        width: auto !important;
+        min-width: 52px !important;
+        padding: 0 14px 0 0 !important;
+        gap: 10px !important;
+        justify-content: flex-start !important;
+    }
+    .floating-contact .float-link .float-copy,
+    .floating-contact .float-link-toggle .float-copy,
+    .floating-contact .back-to-top .back-to-top-copy,
+    .floating-contact.open .floating-trigger-copy,
+    .floating-contact:hover .floating-trigger-copy {
+        display: flex !important;
+        flex-direction: column !important;
+        text-align: left !important;
+    }
+    .floating-contact .floating-trigger {
+        width: auto !important;
+        min-width: 52px !important;
+        padding-right: 14px !important;
+        gap: 10px !important;
+        justify-content: flex-start !important;
+    }
+    .floating-contact .floating-trigger-copy,
+    .floating-contact .float-copy,
+    .floating-contact .back-to-top-copy {
+        color: #f4f7fb !important;
+    }
+    .floating-contact .float-copy strong,
+    .floating-contact .back-to-top-copy strong,
+    .floating-contact .floating-trigger-copy strong {
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+    }
+    .floating-contact .float-copy small,
+    .floating-contact .floating-trigger-copy small {
+        font-size: 11px !important;
+        line-height: 1.3 !important;
+        color: rgba(244, 247, 251, 0.72) !important;
+    }
+    .nav-mega-panel {
+        top: 80px !important;
+    }
+    .nav-mega-layout {
+        height: auto !important;
+        min-height: 380px !important;
+        max-height: min(76vh, 640px) !important;
+        align-items: stretch !important;
+    }
+    .nav-mega-sidebar,
+    .nav-mega-content,
+    .nav-mega-cards {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+    .nav-tree-branch-title {
+        white-space: normal !important;
+        line-height: 1.35 !important;
+        align-items: flex-start !important;
+    }
+    .nav-mega-card-label {
+        white-space: normal !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+    }
+}
+
+
+/* --- AI-first floating contact redesign --- */
+.floating-contact {
+    position: fixed !important;
+    right: 18px !important;
+    bottom: 18px !important;
+    z-index: 160 !important;
+    display: grid !important;
+    justify-items: end !important;
+    gap: 10px !important;
+}
+.floating-contact .floating-menu {
+    width: min(364px, calc(100vw - 28px)) !important;
+    padding: 16px !important;
+    border-radius: 24px !important;
+    background: rgba(8, 19, 31, 0.96) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 18px 46px rgba(5, 14, 24, 0.34) !important;
+    backdrop-filter: blur(14px) !important;
+    display: grid !important;
+    gap: 10px !important;
+}
+.floating-menu-head {
+    display: grid !important;
+    gap: 6px !important;
+    margin-bottom: 2px !important;
+}
+.floating-menu-head strong {
+    color: #f7fbff !important;
+    font-size: 16px !important;
+    line-height: 1.2 !important;
+}
+.floating-menu-head span {
+    color: rgba(220, 232, 244, 0.72) !important;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+}
+.floating-menu-subhead {
+    display: flex !important;
+    align-items: center !important;
+    margin-top: 2px !important;
+}
+.floating-menu-subhead span {
+    color: rgba(197, 214, 231, 0.74) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.04em !important;
+}
+.floating-contact .support-chat {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 96px !important;
+    padding: 16px 18px !important;
+    border-radius: 20px !important;
+    background: linear-gradient(135deg, #2e83d0 0%, #245fa4 42%, #142f54 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 14px 28px rgba(15, 53, 94, 0.32) !important;
+    display: grid !important;
+    grid-template-columns: 56px minmax(0, 1fr) auto !important;
+    gap: 14px !important;
+    align-items: center !important;
+}
+.floating-contact .support-chat .float-icon {
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    border-radius: 18px !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: #fff !important;
+}
+.floating-contact .support-chat .float-copy {
+    display: grid !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+}
+.floating-contact .support-chat .float-copy strong {
+    color: #fff !important;
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+}
+.floating-contact .support-chat .float-copy small {
+    display: block !important;
+    color: rgba(240, 247, 255, 0.82) !important;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+    white-space: normal !important;
+}
+.float-link-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 6px 10px !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: #fff !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+}
+.floating-contact .float-link-group,
+.floating-contact .float-link.location,
+.floating-contact .float-link.wechat,
+.floating-contact .back-to-top {
+    width: 100% !important;
+}
+.floating-contact .float-link-toggle,
+.floating-contact .float-link.location,
+.floating-contact .float-link.wechat,
+.floating-contact .back-to-top {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 58px !important;
+    padding: 12px 14px !important;
+    border-radius: 18px !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #f4f7fb !important;
+}
+.floating-contact .float-link-toggle .float-copy,
+.floating-contact .float-link.location .float-copy,
+.floating-contact .float-link.wechat .float-copy,
+.floating-contact .back-to-top .back-to-top-copy {
+    display: grid !important;
+    gap: 2px !important;
+    text-align: left !important;
+}
+.floating-contact .float-link-toggle .float-copy strong,
+.floating-contact .float-link.location .float-copy strong,
+.floating-contact .float-link.wechat .float-copy strong,
+.floating-contact .back-to-top .back-to-top-copy strong {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+}
+.floating-contact .float-link-toggle .float-copy small,
+.floating-contact .float-link.location .float-copy small,
+.floating-contact .float-link.wechat .float-copy small {
+    display: block !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    color: rgba(212, 224, 236, 0.7) !important;
+}
+.floating-contact .float-link-caret {
+    margin-left: auto !important;
+}
+.floating-contact .float-options {
+    position: static !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+    padding: 8px !important;
+    border-radius: 16px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+.floating-contact .float-option {
+    width: 100% !important;
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+.floating-contact .float-option + .float-option {
+    margin-top: 8px !important;
+}
+.floating-contact .floating-trigger {
+    width: auto !important;
+    min-width: 166px !important;
+    min-height: 58px !important;
+    padding: 0 18px 0 0 !important;
+    border-radius: 20px !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    background: rgba(8, 19, 31, 0.94) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 14px 30px rgba(6, 14, 24, 0.28) !important;
+}
+.floating-contact .floating-trigger-icon {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 20px !important;
+    background: linear-gradient(135deg, #ff7a1a, #e0422f 54%, #b51f2d) !important;
+}
+.floating-contact .floating-trigger-copy {
+    display: grid !important;
+    gap: 2px !important;
+    color: #f7fbff !important;
+    text-align: left !important;
+}
+.floating-contact .floating-trigger-copy strong {
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+}
+.floating-contact .floating-trigger-copy small {
+    display: block !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    color: rgba(220, 232, 244, 0.7) !important;
+}
+@media (min-width: 961px) {
+    .floating-contact .floating-menu {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        transform: translateY(8px) scale(0.98) !important;
+        transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease !important;
+    }
+    .floating-contact:hover .floating-menu,
+    .floating-contact.open .floating-menu {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        transform: translateY(0) scale(1) !important;
+    }
+}
+@media (max-width: 960px) {
+    .floating-contact {
+        right: 12px !important;
+        bottom: 88px !important;
+    }
+    .floating-contact .floating-menu {
+        width: min(100vw - 24px, 420px) !important;
+        padding: 14px !important;
+        border-radius: 22px !important;
+    }
+    .floating-contact .support-chat {
+        grid-template-columns: 48px minmax(0, 1fr) !important;
+        min-height: 84px !important;
+    }
+    .floating-contact .support-chat .float-icon {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+    }
+    .float-link-badge {
+        display: none !important;
+    }
+    .floating-contact .floating-trigger {
+        min-width: 0 !important;
+        width: 58px !important;
+        height: 58px !important;
+        padding: 0 !important;
+        justify-content: center !important;
+    }
+    .floating-contact .floating-trigger-copy {
+        display: none !important;
+    }
+}
+
+
+/* --- AI-first floating contact redesign: layout fixes --- */
+.floating-contact .floating-menu > *,
+.floating-contact .floating-menu .float-link,
+.floating-contact .floating-menu .float-link-group,
+.floating-contact .floating-menu .float-options,
+.floating-contact .floating-menu .float-option {
+    position: static !important;
+    inset: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+.floating-contact .floating-menu .float-link,
+.floating-contact .floating-menu .float-link-toggle,
+.floating-contact .floating-menu .float-option,
+.floating-contact .floating-menu .back-to-top {
+    display: flex !important;
+    align-items: center !important;
+}
+.floating-contact .floating-menu .float-link-group {
+    display: grid !important;
+    gap: 8px !important;
+}
+.floating-contact .floating-menu .float-link.whatsapp,
+.floating-contact .floating-menu .float-link.address {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 58px !important;
+    padding: 12px 14px !important;
+    border-radius: 18px !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #f4f7fb !important;
+}
+.floating-contact .floating-menu .float-link.whatsapp .float-copy,
+.floating-contact .floating-menu .float-link.address .float-copy {
+    display: grid !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+}
+.floating-contact .floating-menu .float-link.whatsapp .float-copy strong,
+.floating-contact .floating-menu .float-link.address .float-copy strong {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+}
+.floating-contact .floating-menu .float-link.whatsapp .float-copy small,
+.floating-contact .floating-menu .float-link.address .float-copy small {
+    display: block !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    color: rgba(212, 224, 236, 0.7) !important;
+    white-space: normal !important;
+}
+.floating-menu-subhead {
+    color: rgba(197, 214, 231, 0.74) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+}
+@media (min-width: 961px) {
+    .floating-contact:hover .floating-trigger,
+    .floating-contact.open .floating-trigger {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transform: translateY(8px) !important;
+    }
+}
+
+
+/* --- AI-first floating contact redesign: width fixes --- */
+.floating-contact .floating-menu .support-chat,
+.floating-contact .floating-menu .float-link-toggle.email,
+.floating-contact .floating-menu .float-link-toggle.phone,
+.floating-contact .floating-menu .float-link.whatsapp,
+.floating-contact .floating-menu .float-link.address {
+    width: 100% !important;
+    max-width: none !important;
+    justify-self: stretch !important;
+    align-self: stretch !important;
+}
+.floating-contact .floating-menu .support-chat .float-copy,
+.floating-contact .floating-menu .float-link-toggle.email .float-copy,
+.floating-contact .floating-menu .float-link-toggle.phone .float-copy,
+.floating-contact .floating-menu .float-link.whatsapp .float-copy,
+.floating-contact .floating-menu .float-link.address .float-copy {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+}
+
+
+/* --- Floating contact final template-driven polish --- */
+.floating-contact {
+    position: fixed !important;
+    right: 18px !important;
+    bottom: 18px !important;
+    z-index: 160 !important;
+    display: grid !important;
+    justify-items: end !important;
+    gap: 10px !important;
+}
+.floating-contact .floating-menu {
+    width: min(364px, calc(100vw - 28px)) !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 16px !important;
+    border-radius: 24px !important;
+    background: rgba(8, 19, 31, 0.96) !important;
+    border: 1px solid rgba(255,255,255,.1) !important;
+    box-shadow: 0 18px 46px rgba(5,14,24,.34) !important;
+    backdrop-filter: blur(14px) !important;
+}
+.floating-contact .floating-menu > * {
+    min-width: 0 !important;
+    width: 100% !important;
+}
+.floating-menu-head {
+    display: grid !important;
+    gap: 8px !important;
+    margin-bottom: 2px !important;
+}
+.floating-menu-head-copy {
+    display: grid !important;
+    gap: 6px !important;
+}
+.floating-menu-head-copy strong {
+    color: #f7fbff !important;
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+}
+.floating-menu-head-copy p {
+    margin: 0 !important;
+    color: rgba(220,232,244,.76) !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+}
+.float-link-badge {
+    display: inline-flex !important;
+    width: auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 6px 10px !important;
+    border-radius: 999px !important;
+    background: rgba(255,255,255,.18) !important;
+    color: #fff !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+}
+.floating-contact .support-chat {
+    display: grid !important;
+    grid-template-columns: 56px minmax(0,1fr) !important;
+    align-items: center !important;
+    gap: 14px !important;
+    min-height: 88px !important;
+    padding: 16px 18px !important;
+    border-radius: 20px !important;
+    background: linear-gradient(135deg, #2e83d0 0%, #245fa4 42%, #142f54 100%) !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 14px 28px rgba(15,53,94,.32) !important;
+}
+.floating-contact .support-chat .float-icon,
+.floating-contact .float-link-toggle .float-icon,
+.floating-contact .float-link.whatsapp .float-icon,
+.floating-contact .float-link.address .float-icon {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    border-radius: 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.floating-contact .support-chat .float-icon {
+    background: rgba(255,255,255,.16) !important;
+    color: #fff !important;
+}
+.floating-contact .support-chat .float-copy,
+.floating-contact .float-link-toggle .float-copy,
+.floating-contact .float-link.whatsapp .float-copy,
+.floating-contact .float-link.address .float-copy {
+    display: grid !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+.floating-contact .support-chat .float-copy strong {
+    color: #fff !important;
+    font-size: 16px !important;
+    line-height: 1.2 !important;
+}
+.floating-contact .support-chat .float-copy small {
+    color: rgba(240,247,255,.84) !important;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+    white-space: normal !important;
+}
+.floating-menu-subhead {
+    color: rgba(197,214,231,.74) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    letter-spacing: .04em !important;
+    text-transform: uppercase !important;
+}
+.floating-contact .float-link-group {
+    display: block !important;
+}
+.floating-contact .float-link-toggle,
+.floating-contact .float-link.whatsapp,
+.floating-contact .float-link.address {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 52px minmax(0,1fr) auto !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-height: 58px !important;
+    padding: 12px 14px !important;
+    border-radius: 18px !important;
+    background: rgba(255,255,255,.06) !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    color: #f4f7fb !important;
+}
+.floating-contact .float-link.whatsapp,
+.floating-contact .float-link.address {
+    grid-template-columns: 52px minmax(0,1fr) !important;
+}
+.floating-contact .float-link-toggle .float-copy strong,
+.floating-contact .float-link.whatsapp .float-copy strong,
+.floating-contact .float-link.address .float-copy strong {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+}
+.floating-contact .float-link-toggle .float-copy small,
+.floating-contact .float-link.whatsapp .float-copy small,
+.floating-contact .float-link.address .float-copy small {
+    display: block !important;
+    color: rgba(212,224,236,.72) !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+}
+.floating-contact .float-link-caret {
+    margin-left: auto !important;
+}
+.floating-contact .float-options {
+    position: static !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+    padding: 8px !important;
+    border-radius: 16px !important;
+    background: rgba(255,255,255,.04) !important;
+    border: 1px solid rgba(255,255,255,.06) !important;
+}
+.floating-contact .float-option {
+    width: 100% !important;
+    display: block !important;
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+    background: rgba(255,255,255,.04) !important;
+}
+.floating-contact .float-option + .float-option {
+    margin-top: 8px !important;
+}
+.floating-contact .floating-trigger {
+    min-width: 172px !important;
+    min-height: 58px !important;
+    padding: 0 18px 0 0 !important;
+    display: grid !important;
+    grid-template-columns: 58px minmax(0,1fr) !important;
+    align-items: center !important;
+    gap: 12px !important;
+    border-radius: 20px !important;
+    background: rgba(8,19,31,.94) !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    box-shadow: 0 14px 30px rgba(6,14,24,.28) !important;
+}
+.floating-contact .floating-trigger-icon {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 20px !important;
+    background: linear-gradient(135deg, #ff7a1a, #e0422f 54%, #b51f2d) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.floating-contact .floating-trigger-copy {
+    display: grid !important;
+    gap: 2px !important;
+    text-align: left !important;
+    color: #f7fbff !important;
+}
+.floating-contact .floating-trigger-copy strong { font-size: 14px !important; line-height: 1.2 !important; }
+.floating-contact .floating-trigger-copy small { color: rgba(220,232,244,.72) !important; font-size: 11px !important; line-height: 1.35 !important; }
+@media (min-width: 961px) {
+    .floating-contact .floating-menu {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        transform: translateY(8px) scale(.98) !important;
+        transition: opacity .22s ease, transform .22s ease, visibility .22s ease !important;
+    }
+    .floating-contact:hover .floating-menu,
+    .floating-contact.open .floating-menu {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        transform: translateY(0) scale(1) !important;
+    }
+    .floating-contact:hover .floating-trigger,
+    .floating-contact.open .floating-trigger {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transform: translateY(8px) !important;
+    }
+}
+@media (max-width: 960px) {
+    .floating-contact { right: 12px !important; bottom: 88px !important; }
+    .floating-contact .floating-menu { width: min(304px, calc(100vw - 24px)) !important; padding: 14px !important; border-radius: 22px !important; }
+    .floating-contact .support-chat { grid-template-columns: 48px minmax(0,1fr) !important; min-height: 80px !important; padding: 14px !important; }
+    .floating-contact .support-chat .float-icon,
+    .floating-contact .float-link-toggle .float-icon,
+    .floating-contact .float-link.whatsapp .float-icon,
+    .floating-contact .float-link.address .float-icon { width: 48px !important; height: 48px !important; min-width: 48px !important; }
+    .float-link-badge { display: none !important; }
+    .floating-contact .floating-trigger { min-width: 0 !important; width: 58px !important; height: 58px !important; padding: 0 !important; grid-template-columns: 58px !important; justify-content: center !important; }
+    .floating-contact .floating-trigger-copy { display: none !important; }
+}
+
+/* --- Floating contact trigger and alignment fixes --- */
+.floating-contact { align-items: end !important; }
+.floating-contact .floating-menu { position: absolute !important; right: 0 !important; bottom: calc(100% + 12px) !important; z-index: 2 !important; }
+.floating-contact .support-chat,
+.floating-contact .float-link-toggle,
+.floating-contact .float-link.whatsapp,
+.floating-contact .float-link.address { align-items: start !important; }
+.floating-contact .support-chat .float-icon,
+.floating-contact .float-link-toggle .float-icon,
+.floating-contact .float-link.whatsapp .float-icon,
+.floating-contact .float-link.address .float-icon { align-self: center !important; }
+.floating-contact .support-chat .float-copy,
+.floating-contact .float-link-toggle .float-copy,
+.floating-contact .float-link.whatsapp .float-copy,
+.floating-contact .float-link.address .float-copy,
+.floating-contact .floating-trigger-copy,
+.floating-menu-head-copy { min-width: 0 !important; }
+.floating-contact .support-chat .float-copy strong,
+.floating-contact .support-chat .float-copy small,
+.floating-contact .float-link-toggle .float-copy strong,
+.floating-contact .float-link-toggle .float-copy small,
+.floating-contact .float-link.whatsapp .float-copy strong,
+.floating-contact .float-link.whatsapp .float-copy small,
+.floating-contact .float-link.address .float-copy strong,
+.floating-contact .float-link.address .float-copy small,
+.floating-contact .floating-trigger-copy strong,
+.floating-contact .floating-trigger-copy small,
+.floating-menu-head-copy strong,
+.floating-menu-head-copy p { overflow-wrap: anywhere !important; word-break: break-word !important; }
+@media (max-width: 960px) { .floating-contact .floating-menu { right: 0 !important; left: auto !important; bottom: calc(100% + 10px) !important; width: min(304px, calc(100vw - 24px)) !important; } }
+
+
+/* --- Floating contact final interaction cleanup --- */
+.floating-contact {
+    position: fixed !important;
+    right: 18px !important;
+    bottom: 18px !important;
+    z-index: 160 !important;
+    display: grid !important;
+    justify-items: end !important;
+    gap: 10px !important;
+    align-items: end !important;
+}
+.floating-contact .floating-menu {
+    position: absolute !important;
+    right: 0 !important;
+    bottom: calc(100% + 12px) !important;
+    width: min(364px, calc(100vw - 28px)) !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 16px !important;
+    border-radius: 24px !important;
+    background: rgba(8, 19, 31, 0.96) !important;
+    border: 1px solid rgba(255,255,255,.1) !important;
+    box-shadow: 0 18px 46px rgba(5,14,24,.34) !important;
+    backdrop-filter: blur(14px) !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translateY(8px) scale(.98) !important;
+    transition: opacity .22s ease, transform .22s ease, visibility .22s ease !important;
+    z-index: 2 !important;
+}
+.floating-contact.open .floating-menu {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transform: translateY(0) scale(1) !important;
+}
+.floating-contact .support-chat,
+.floating-contact .float-link-toggle,
+.floating-contact .float-link.whatsapp,
+.floating-contact .float-link.address {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 64px !important;
+    display: grid !important;
+    grid-template-columns: 52px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+    border-radius: 18px !important;
+}
+.floating-contact .float-link.whatsapp,
+.floating-contact .float-link.address {
+    grid-template-columns: 52px minmax(0, 1fr) !important;
+}
+.floating-contact .support-chat {
+    background: linear-gradient(135deg, #2e83d0 0%, #245fa4 42%, #142f54 100%) !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 14px 28px rgba(15,53,94,.32) !important;
+}
+.floating-contact .float-link-toggle,
+.floating-contact .float-link.whatsapp,
+.floating-contact .float-link.address {
+    background: rgba(255,255,255,.06) !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    color: #f4f7fb !important;
+}
+.floating-contact .support-chat .float-icon,
+.floating-contact .float-link-toggle .float-icon,
+.floating-contact .float-link.whatsapp .float-icon,
+.floating-contact .float-link.address .float-icon,
+.floating-contact .floating-trigger-icon,
+.floating-contact .back-to-top-icon {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 16px !important;
+}
+.floating-contact .support-chat .float-icon { background: rgba(255,255,255,.16) !important; color: #fff !important; }
+.floating-contact .float-link-toggle .float-icon,
+.floating-contact .float-link.whatsapp .float-icon,
+.floating-contact .float-link.address .float-icon,
+.floating-contact .back-to-top-icon { background: rgba(255,255,255,.04) !important; color: #fff !important; }
+.floating-contact .support-chat .float-copy,
+.floating-contact .float-link-toggle .float-copy,
+.floating-contact .float-link.whatsapp .float-copy,
+.floating-contact .float-link.address .float-copy,
+.floating-contact .floating-trigger-copy {
+    display: grid !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+    align-content: center !important;
+}
+.floating-contact .support-chat .float-copy strong,
+.floating-contact .float-link-toggle .float-copy strong,
+.floating-contact .float-link.whatsapp .float-copy strong,
+.floating-contact .float-link.address .float-copy strong,
+.floating-contact .floating-trigger-copy strong {
+    margin: 0 !important;
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+}
+.floating-contact .support-chat .float-copy small,
+.floating-contact .float-link-toggle .float-copy small,
+.floating-contact .float-link.whatsapp .float-copy small,
+.floating-contact .float-link.address .float-copy small,
+.floating-contact .floating-trigger-copy small {
+    display: block !important;
+    margin: 0 !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    color: rgba(220,232,244,.76) !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+}
+.floating-contact .float-link-caret { margin-left: auto !important; }
+.floating-contact .float-options {
+    position: static !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+    padding: 8px !important;
+    border-radius: 16px !important;
+    background: rgba(255,255,255,.04) !important;
+    border: 1px solid rgba(255,255,255,.06) !important;
+}
+.floating-contact .float-option {
+    width: 100% !important;
+    display: block !important;
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+    background: rgba(255,255,255,.04) !important;
+}
+.floating-contact .floating-trigger {
+    position: relative !important;
+    min-width: 58px !important;
+    width: 58px !important;
+    height: 58px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 20px !important;
+    background: rgba(8,19,31,.94) !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    box-shadow: 0 14px 30px rgba(6,14,24,.28) !important;
+}
+.floating-contact .floating-trigger-icon {
+    border-radius: 20px !important;
+    background: linear-gradient(135deg, #ff7a1a, #e0422f 54%, #b51f2d) !important;
+    color: #fff !important;
+    animation: floatingTriggerNudge 2s ease-in-out infinite !important;
+}
+.floating-contact .floating-trigger-copy { display: none !important; }
+.floating-contact .floating-trigger-badge {
+    position: absolute !important;
+    top: -6px !important;
+    right: -4px !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    padding: 0 5px !important;
+    border-radius: 999px !important;
+    background: #ef4444 !important;
+    color: #fff !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    line-height: 18px !important;
+    text-align: center !important;
+    box-shadow: 0 8px 16px rgba(239,68,68,.32) !important;
+}
+.floating-contact .back-to-top {
+    min-width: 58px !important;
+    width: 58px !important;
+    height: 58px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 20px !important;
+    background: rgba(8,19,31,.94) !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    box-shadow: 0 14px 30px rgba(6,14,24,.22) !important;
+}
+.floating-contact .back-to-top-copy { display: none !important; }
+@keyframes floatingTriggerNudge {
+    0%, 82%, 100% { transform: translateY(0) scale(1); }
+    88% { transform: translateY(-5px) scale(1.04); }
+    94% { transform: translateY(0) scale(1); }
+}
+@media (max-width: 960px) {
+    .floating-contact { right: 12px !important; bottom: 88px !important; }
+    .floating-contact .floating-menu {
+        right: 0 !important;
+        left: auto !important;
+        bottom: calc(100% + 10px) !important;
+        width: min(304px, calc(100vw - 24px)) !important;
+        padding: 14px !important;
+        border-radius: 22px !important;
+    }
+}
+
+/* --- Floating contact open-state visibility fix --- */
+
+.floating-contact.open .floating-trigger {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transform: none !important;
+}
+.floating-contact.open .back-to-top {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transform: translateY(0) !important;
+}
+
+
+/* --- Floating contact row alignment and badge fix --- */
+.floating-contact .support-chat,
+.floating-contact .float-link-toggle,
+.floating-contact .float-link.whatsapp,
+.floating-contact .float-link.address {
+    grid-template-columns: 52px minmax(0, 1fr) !important;
+    column-gap: 12px !important;
+}
+.floating-contact .float-link-caret {
+    display: none !important;
+}
+.floating-contact .support-chat,
+.floating-contact .float-link-toggle,
+.floating-contact .float-link.whatsapp,
+.floating-contact .float-link.address {
+    align-items: center !important;
+}
+.floating-contact .support-chat .float-icon,
+.floating-contact .float-link-toggle .float-icon,
+.floating-contact .float-link.whatsapp .float-icon,
+.floating-contact .float-link.address .float-icon {
+    align-self: center !important;
+    justify-self: center !important;
+}
+.floating-contact .support-chat .float-copy,
+.floating-contact .float-link-toggle .float-copy,
+.floating-contact .float-link.whatsapp .float-copy,
+.floating-contact .float-link.address .float-copy {
+    align-self: center !important;
+    width: 100% !important;
+}
+.floating-contact .floating-trigger,
+.floating-contact .back-to-top {
+    overflow: visible !important;
+}
+.floating-contact .floating-trigger {
+    animation: floatingTriggerNudgeBox 2s ease-in-out infinite !important;
+    will-change: transform !important;
+}
+.floating-contact .floating-trigger-icon {
+    animation: none !important;
+}
+.floating-contact .floating-trigger-badge {
+    z-index: 6 !important;
+    top: -7px !important;
+    right: -6px !important;
+}
+.floating-contact .floating-trigger svg,
+.floating-contact .back-to-top svg {
+    width: 24px !important;
+    height: 24px !important;
+}
+.floating-contact .floating-trigger-icon,
+.floating-contact .back-to-top-icon {
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.12) !important;
+}
+@keyframes floatingTriggerNudgeBox {
+    0%, 82%, 100% { transform: translateY(0) scale(1); }
+    88% { transform: translateY(-4px) scale(1.03); }
+    94% { transform: translateY(0) scale(1); }
+}
+
+/* --- Floating contact hover bridge and row lock ai13 --- */
+.floating-contact {
+    overflow: visible !important;
+}
+
+.floating-contact .floating-menu {
+    bottom: calc(100% - 2px) !important;
+    overflow: visible !important;
+    pointer-events: auto !important;
+}
+
+.floating-contact .floating-menu::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -18px;
+    height: 18px;
+    pointer-events: auto;
+}
+
+.floating-contact:hover .floating-menu,
+.floating-contact.open .floating-menu {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translate3d(0, 0, 0) !important;
+    pointer-events: auto !important;
+}
+
+.floating-contact:hover .floating-trigger,
+.floating-contact.open .floating-trigger,
+.floating-contact .floating-trigger {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    overflow: visible !important;
+}
+
+.floating-contact:hover .back-to-top,
+.floating-contact.open .back-to-top,
+.floating-contact .back-to-top.visible {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+.floating-contact [data-contact-menu] > .float-link,
+.floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: 52px minmax(0, 1fr) !important;
+    column-gap: 12px !important;
+    align-items: center !important;
+    justify-items: stretch !important;
+    width: 100% !important;
+    min-height: 64px !important;
+    padding: 12px 14px !important;
+    margin: 0 !important;
+    text-align: left !important;
+}
+
+.floating-contact [data-contact-menu] > .float-link .float-icon,
+.floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle .float-icon {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: center !important;
+    align-self: center !important;
+    position: static !important;
+    margin: 0 !important;
+    inset: auto !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+}
+
+.floating-contact [data-contact-menu] > .float-link .float-copy,
+.floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle .float-copy {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: stretch !important;
+    align-self: center !important;
+    position: static !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+    width: auto !important;
+    padding: 0 !important;
+    transform: none !important;
+}
+
+.floating-contact .float-link-caret {
+    display: none !important;
+}
+
+.floating-contact .floating-trigger .floating-trigger-icon,
+.floating-contact .back-to-top .back-to-top-icon {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+}
+
+.floating-contact .floating-trigger .floating-trigger-icon > svg,
+.floating-contact .back-to-top .back-to-top-icon > svg {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    display: block !important;
+}
+
+.floating-contact [data-contact-menu] .float-icon > svg {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    display: block !important;
+}
+
+.floating-contact .floating-trigger-badge {
+    z-index: 20 !important;
+    pointer-events: none !important;
+}
+
+/* --- Floating contact icon-only trigger lock ai16 --- */
+.floating-contact .floating-trigger,
+.floating-contact .back-to-top {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    text-align: center !important;
+}
+
+.floating-contact .floating-trigger-copy,
+.floating-contact .back-to-top-copy {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
+.floating-contact .floating-trigger .floating-trigger-icon,
+.floating-contact .back-to-top .back-to-top-icon {
+    position: static !important;
+    inset: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* --- Floating contact visual alignment refresh ai17 --- */
+.floating-contact {
+    --float-panel: rgba(9, 21, 33, .96);
+    --float-card: rgba(16, 31, 45, .92);
+    --float-card-hover: rgba(24, 48, 68, .96);
+    --float-border: rgba(147, 180, 208, .18);
+    --float-border-active: rgba(92, 167, 222, .55);
+    --float-text: #f7fbff;
+    --float-muted: rgba(219, 232, 244, .68);
+    --float-red: #ed3b32;
+    --float-blue: #2f7db9;
+    --float-shadow: 0 18px 44px rgba(4, 13, 22, .34);
+}
+
+.floating-contact .floating-menu {
+    padding: 16px !important;
+    gap: 10px !important;
+    border-radius: 24px !important;
+    background: linear-gradient(180deg, rgba(10, 24, 37, .98), rgba(8, 18, 28, .96)) !important;
+    border: 1px solid rgba(142, 176, 204, .2) !important;
+    box-shadow: var(--float-shadow) !important;
+}
+
+.floating-contact [data-contact-menu] > .float-link,
+.floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle {
+    min-height: 66px !important;
+    height: 66px !important;
+    padding: 9px 14px !important;
+    display: grid !important;
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    column-gap: 14px !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    border-radius: 16px !important;
+    background: var(--float-card) !important;
+    border: 1px solid var(--float-border) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04) !important;
+    transform: translateY(0) !important;
+    transition: transform .18s ease, border-color .18s ease, background-color .18s ease, box-shadow .18s ease !important;
+}
+
+.floating-contact [data-contact-menu] > .float-link:hover,
+.floating-contact [data-contact-menu] > .float-link:focus-visible,
+.floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle:hover,
+.floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle:focus-visible,
+.floating-contact [data-contact-menu] > .float-link-group.open > .float-link-toggle {
+    background: var(--float-card-hover) !important;
+    border-color: var(--float-border-active) !important;
+    box-shadow: 0 10px 26px rgba(17, 95, 150, .2), inset 0 1px 0 rgba(255,255,255,.08) !important;
+    transform: translateY(-1px) !important;
+}
+
+.floating-contact [data-contact-menu] > .support-chat {
+    background: linear-gradient(135deg, rgba(238, 62, 50, .95), rgba(36, 118, 184, .96)) !important;
+    border-color: rgba(149, 207, 248, .45) !important;
+}
+
+.floating-contact [data-contact-menu] > .support-chat:hover,
+.floating-contact [data-contact-menu] > .support-chat:focus-visible {
+    background: linear-gradient(135deg, rgba(246, 75, 59, .98), rgba(48, 139, 207, .98)) !important;
+    border-color: rgba(202, 231, 255, .72) !important;
+}
+
+.floating-contact [data-contact-menu] .float-icon {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    place-self: center !important;
+    position: static !important;
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    border-radius: 15px !important;
+    background: rgba(255,255,255,.055) !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    color: #ffffff !important;
+}
+
+.floating-contact [data-contact-menu] > .support-chat .float-icon {
+    background: rgba(255,255,255,.18) !important;
+    border-color: rgba(255,255,255,.2) !important;
+}
+
+.floating-contact [data-contact-menu] .float-copy {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: stretch !important;
+    display: flex !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+}
+
+.floating-contact [data-contact-menu] .float-copy strong,
+.floating-contact [data-contact-menu] .float-copy small {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+    letter-spacing: 0 !important;
+}
+
+.floating-contact [data-contact-menu] .float-copy strong {
+    color: var(--float-text) !important;
+    font-size: 15px !important;
+    line-height: 1.18 !important;
+    font-weight: 750 !important;
+}
+
+.floating-contact [data-contact-menu] .float-copy small {
+    color: var(--float-muted) !important;
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.floating-contact .floating-trigger,
+.floating-contact .back-to-top {
+    width: 54px !important;
+    height: 54px !important;
+    min-width: 54px !important;
+    min-height: 54px !important;
+    border-radius: 18px !important;
+    overflow: visible !important;
+    background: linear-gradient(145deg, rgba(10, 25, 38, .98), rgba(16, 35, 51, .98)) !important;
+    border: 1px solid rgba(140, 177, 205, .24) !important;
+    box-shadow: 0 12px 28px rgba(3, 13, 23, .28), inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+
+.floating-contact .floating-trigger:hover,
+.floating-contact .back-to-top:hover,
+.floating-contact.open .floating-trigger {
+    border-color: rgba(96, 169, 222, .58) !important;
+    background: linear-gradient(145deg, rgba(15, 37, 55, .99), rgba(23, 53, 76, .99)) !important;
+}
+
+.floating-contact .floating-trigger .floating-trigger-icon,
+.floating-contact .back-to-top .back-to-top-icon {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    border-radius: 14px !important;
+    background: linear-gradient(135deg, var(--float-red), #b9212c) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,.16) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.14) !important;
+}
+
+.floating-contact .back-to-top .back-to-top-icon {
+    background: rgba(255,255,255,.07) !important;
+    color: #f7fbff !important;
+}
+
+.floating-contact .floating-trigger .floating-trigger-icon > svg,
+.floating-contact .back-to-top .back-to-top-icon > svg {
+    width: 27px !important;
+    height: 27px !important;
+    min-width: 27px !important;
+    min-height: 27px !important;
+}
+
+.floating-contact .floating-trigger-badge {
+    position: absolute !important;
+    top: -5px !important;
+    right: -5px !important;
+    z-index: 40 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    border-radius: 999px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    background: #ff3b35 !important;
+    color: #fff !important;
+    border: 2px solid #0a1a28 !important;
+    box-shadow: 0 4px 10px rgba(237, 59, 50, .34) !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    font-weight: 800 !important;
+}
+
+@media (max-width: 860px) {
+    .floating-contact .floating-menu {
+        width: min(320px, calc(100vw - 24px)) !important;
+        padding: 14px !important;
+        gap: 9px !important;
+        border-radius: 22px !important;
+    }
+    .floating-contact [data-contact-menu] > .float-link,
+    .floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle {
+        height: 62px !important;
+        min-height: 62px !important;
+        grid-template-columns: 46px minmax(0, 1fr) !important;
+        column-gap: 12px !important;
+        padding: 8px 12px !important;
+    }
+    .floating-contact [data-contact-menu] .float-icon {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        min-height: 42px !important;
+        border-radius: 14px !important;
+    }
+    .floating-contact [data-contact-menu] .float-icon > svg {
+        width: 22px !important;
+        height: 22px !important;
+    }
+    .floating-contact .floating-trigger,
+    .floating-contact .back-to-top {
+        width: 54px !important;
+        height: 54px !important;
+        min-width: 54px !important;
+        min-height: 54px !important;
+        border-radius: 18px !important;
+    }
+    .floating-contact .floating-trigger-badge {
+        display: flex !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        top: -4px !important;
+        right: -4px !important;
+    }
+}
+
+/* --- Floating contact text column lock ai18 --- */
+.floating-contact [data-contact-menu] > .float-link,
+.floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle {
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+}
+.floating-contact [data-contact-menu] > .float-link .float-copy,
+.floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle .float-copy,
+.floating-contact [data-contact-menu] .float-copy {
+    justify-self: stretch !important;
+    align-self: center !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    text-align: left !important;
+}
+.floating-contact [data-contact-menu] > .float-link .float-copy strong,
+.floating-contact [data-contact-menu] > .float-link .float-copy small,
+.floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle .float-copy strong,
+.floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle .float-copy small {
+    width: 100% !important;
+    text-align: left !important;
+}
+@media (max-width: 860px) {
+    .floating-contact [data-contact-menu] > .float-link,
+    .floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle {
+        grid-template-columns: 46px minmax(0, 1fr) !important;
+    }
+}
+
+/* --- Floating contact direct-link copy parity ai19 --- */
+.floating-contact .float-link.whatsapp .float-copy,
+.floating-contact .float-link.address .float-copy,
+.floating-contact [data-contact-menu] > .float-link.whatsapp .float-copy,
+.floating-contact [data-contact-menu] > .float-link.address .float-copy {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    gap: 3px !important;
+    text-align: left !important;
+}
+.floating-contact .float-link.whatsapp .float-copy strong,
+.floating-contact .float-link.whatsapp .float-copy small,
+.floating-contact .float-link.address .float-copy strong,
+.floating-contact .float-link.address .float-copy small {
+    width: 100% !important;
+    text-align: left !important;
+}
+
+/* --- Floating contact direct-link optical x-lock ai20 --- */
+.floating-contact .float-link.whatsapp .float-copy,
+.floating-contact .float-link.address .float-copy {
+    margin-left: 2px !important;
+}
+@media (max-width: 860px) {
+    .floating-contact .float-link.whatsapp .float-copy,
+    .floating-contact .float-link.address .float-copy {
+        margin-left: 0 !important;
+    }
+}
+
+/* --- Floating contact mobile direct-link x-lock ai21 --- */
+@media (max-width: 860px) {
+    .floating-contact .float-link.whatsapp .float-icon,
+    .floating-contact .float-link.address .float-icon,
+    .floating-contact .float-link.whatsapp .float-copy,
+    .floating-contact .float-link.address .float-copy {
+        margin-left: -2px !important;
+    }
+}
+
+/* --- Floating contact interaction and mobile alignment ai22 --- */
+.floating-contact .support-chat,
+.floating-contact .float-link,
+.floating-contact .float-link-toggle,
+.floating-contact .floating-trigger,
+.floating-contact .back-to-top {
+    cursor: pointer !important;
+}
+
+.floating-contact .back-to-top {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+.floating-contact .back-to-top.visible {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+.floating-contact.open .back-to-top:not(.visible),
+.floating-contact:hover .back-to-top:not(.visible) {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+.floating-contact .float-link.whatsapp .float-copy,
+.floating-contact .float-link.address .float-copy {
+    align-items: flex-start !important;
+    text-align: left !important;
+}
+
+.floating-contact .float-link.whatsapp .float-copy strong,
+.floating-contact .float-link.whatsapp .float-copy small,
+.floating-contact .float-link.address .float-copy strong,
+.floating-contact .float-link.address .float-copy small {
+    text-align: left !important;
+    justify-content: flex-start !important;
+}
+
+@media (max-width: 860px) {
+    .floating-contact .back-to-top {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+    .floating-contact .back-to-top.visible {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+    .floating-contact [data-contact-menu] > .float-link,
+    .floating-contact [data-contact-menu] > .float-link-group > .float-link-toggle,
+    .floating-contact .float-link,
+    .floating-contact .float-link-toggle {
+        align-items: center !important;
+        justify-items: stretch !important;
+        height: 62px !important;
+        min-height: 62px !important;
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+    }
+    .floating-contact [data-contact-menu] .float-icon,
+    .floating-contact .float-icon {
+        place-self: center !important;
+        align-self: center !important;
+        justify-self: center !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    .floating-contact [data-contact-menu] .float-copy,
+    .floating-contact .float-copy {
+        align-self: center !important;
+        justify-self: stretch !important;
+        justify-content: center !important;
+        align-items: flex-start !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        line-height: 1.2 !important;
+        text-align: left !important;
+    }
+    .floating-contact .float-copy strong {
+        line-height: 1.18 !important;
+        text-align: left !important;
+    }
+    .floating-contact .float-copy small {
+        line-height: 1.22 !important;
+        text-align: left !important;
+    }
+}

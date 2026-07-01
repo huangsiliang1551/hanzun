@@ -4104,3 +4104,270 @@ main {
     inset: 0 !important;
     z-index: 2 !important;
 }
+
+/* --- Floating contact mobile visual refresh ai17 --- */
+@media (max-width: 860px) {
+.floating-contact {
+    overflow: visible !important;
+}
+.floating-contact .floating-menu {
+    width: min(320px, calc(100vw - 24px)) !important;
+    padding: 14px !important;
+    gap: 9px !important;
+    border-radius: 22px !important;
+    background: linear-gradient(180deg, rgba(10, 24, 37, .98), rgba(8, 18, 28, .96)) !important;
+    border: 1px solid rgba(142, 176, 204, .2) !important;
+}
+.floating-contact .float-link,
+.floating-contact .float-link-toggle {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: 46px minmax(0, 1fr) !important;
+    column-gap: 12px !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+    height: 62px !important;
+    min-height: 62px !important;
+    padding: 8px 12px !important;
+    border-radius: 16px !important;
+    background: rgba(16, 31, 45, .92) !important;
+    border: 1px solid rgba(147, 180, 208, .18) !important;
+}
+.floating-contact .support-chat {
+    background: linear-gradient(135deg, rgba(238, 62, 50, .95), rgba(36, 118, 184, .96)) !important;
+    border-color: rgba(149, 207, 248, .45) !important;
+}
+.floating-contact .float-icon {
+    grid-column: 1 !important;
+    place-self: center !important;
+    position: static !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    flex: 0 0 42px !important;
+    border-radius: 14px !important;
+    margin: 0 !important;
+    background: rgba(255,255,255,.055) !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+}
+.floating-contact .float-icon > svg {
+    width: 22px !important;
+    height: 22px !important;
+}
+.floating-contact .float-copy {
+    grid-column: 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-self: center !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.floating-contact .float-copy strong,
+.floating-contact .float-copy small {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+    letter-spacing: 0 !important;
+}
+.floating-contact .float-copy strong {
+    color: #f7fbff !important;
+    font-size: 14px !important;
+    line-height: 1.18 !important;
+    font-weight: 750 !important;
+}
+.floating-contact .float-copy small {
+    color: rgba(219, 232, 244, .68) !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+.floating-contact .float-link-caret {
+    display: none !important;
+}
+.floating-contact .floating-trigger,
+.floating-contact .back-to-top {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 54px !important;
+    height: 54px !important;
+    min-width: 54px !important;
+    min-height: 54px !important;
+    padding: 0 !important;
+    border-radius: 18px !important;
+    overflow: visible !important;
+    background: linear-gradient(145deg, rgba(10, 25, 38, .98), rgba(16, 35, 51, .98)) !important;
+    border: 1px solid rgba(140, 177, 205, .24) !important;
+    box-shadow: 0 12px 28px rgba(3, 13, 23, .28), inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+.floating-contact .floating-trigger-icon,
+.floating-contact .back-to-top-icon {
+    position: static !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    border-radius: 14px !important;
+    margin: 0 !important;
+    background: linear-gradient(135deg, #ed3b32, #b9212c) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,.16) !important;
+}
+.floating-contact .back-to-top-icon {
+    background: rgba(255,255,255,.07) !important;
+}
+.floating-contact .floating-trigger svg,
+.floating-contact .back-to-top svg {
+    width: 27px !important;
+    height: 27px !important;
+}
+.floating-contact .floating-trigger-copy,
+.floating-contact .back-to-top-copy {
+    display: none !important;
+}
+.floating-contact .floating-trigger-badge {
+    position: absolute !important;
+    top: -4px !important;
+    right: -4px !important;
+    z-index: 40 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    border-radius: 999px !important;
+    background: #ff3b35 !important;
+    color: #fff !important;
+    border: 2px solid #0a1a28 !important;
+    box-shadow: 0 4px 10px rgba(237, 59, 50, .34) !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    font-weight: 800 !important;
+}
+}
+
+/* --- Floating contact mobile text column lock ai18 --- */
+@media (max-width: 860px) {
+.floating-contact .float-link,
+.floating-contact .float-link-toggle {
+    grid-template-columns: 46px minmax(0, 1fr) !important;
+}
+.floating-contact .float-copy {
+    justify-self: stretch !important;
+    align-self: center !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    text-align: left !important;
+}
+.floating-contact .float-copy strong,
+.floating-contact .float-copy small {
+    width: 100% !important;
+    text-align: left !important;
+}
+}
+
+/* --- Floating contact direct-link mobile copy parity ai19 --- */
+@media (max-width: 860px) {
+.floating-contact .float-link.whatsapp .float-copy,
+.floating-contact .float-link.address .float-copy {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    gap: 3px !important;
+    text-align: left !important;
+}
+}
+
+/* --- Floating contact mobile direct-link x-lock ai21 --- */
+@media (max-width: 860px) {
+.floating-contact .float-link.whatsapp .float-icon,
+.floating-contact .float-link.address .float-icon,
+.floating-contact .float-link.whatsapp .float-copy,
+.floating-contact .float-link.address .float-copy {
+    margin-left: -2px !important;
+}
+}
+
+/* --- Floating contact mobile interaction and centering ai22 --- */
+@media (max-width: 860px) {
+.floating-contact .support-chat,
+.floating-contact .float-link,
+.floating-contact .float-link-toggle,
+.floating-contact .floating-trigger,
+.floating-contact .back-to-top {
+    cursor: pointer !important;
+}
+.floating-contact .back-to-top {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+.floating-contact .back-to-top.visible {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+.floating-contact.open .back-to-top:not(.visible),
+.floating-contact:hover .back-to-top:not(.visible) {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+.floating-contact .float-link,
+.floating-contact .float-link-toggle {
+    align-items: center !important;
+    justify-items: stretch !important;
+    height: 62px !important;
+    min-height: 62px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+.floating-contact .float-icon {
+    place-self: center !important;
+    align-self: center !important;
+    justify-self: center !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+.floating-contact .float-copy {
+    align-self: center !important;
+    justify-self: stretch !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    line-height: 1.2 !important;
+    text-align: left !important;
+}
+.floating-contact .float-copy strong,
+.floating-contact .float-copy small {
+    text-align: left !important;
+}
+}

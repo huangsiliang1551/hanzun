@@ -514,8 +514,11 @@ final class SitePhraseWorkspaceRepository
         if (str_starts_with($phraseKey, 'page_')) {
             return ['page', 'title'];
         }
-        if ($phraseKey === 'company_name' || $phraseKey === 'floating_contact') {
+        if ($phraseKey === 'company_name') {
             return ['site', 'global'];
+        }
+        if ($phraseKey === 'back_to_top' || str_starts_with($phraseKey, 'floating_')) {
+            return ['site', 'floating_contact'];
         }
 
         return ['general', 'general'];

@@ -50,7 +50,8 @@ final class SettingService
         private readonly SeoService $seoService = new SeoService(),
         private readonly SitePhraseRepository $sitePhraseRepository = new SitePhraseRepository(),
         private readonly SitePhraseWorkspaceRepository $sitePhraseWorkspaceRepository = new SitePhraseWorkspaceRepository(),
-        private readonly SiteBuildService $siteBuildService = new SiteBuildService()
+        private readonly SiteBuildService $siteBuildService = new SiteBuildService(),
+        private readonly SettingTranslationSyncService $settingTranslationSyncService = new SettingTranslationSyncService()
     ) {
     }
 
@@ -514,14 +515,62 @@ final class SettingService
             'social_linkedin' => $this->validateOptionalUrl((string) ($input['social_linkedin'] ?? $current['social_linkedin'] ?? '')),
             'social_youtube' => $this->validateOptionalUrl((string) ($input['social_youtube'] ?? $current['social_youtube'] ?? '')),
             'enterprise_video_url' => $this->validateOptionalAssetPath((string) ($input['enterprise_video_url'] ?? $current['enterprise_video_url'] ?? '')),
+            'hero_image_url' => $this->validateOptionalAssetPath((string) ($input['hero_image_url'] ?? $current['hero_image_url'] ?? '')),
+            'hero_image_alt' => $this->validateOptionalText((string) ($input['hero_image_alt'] ?? $current['hero_image_alt'] ?? ''), 180, 'hero_image_alt'),
+            'hero_title' => $this->validateOptionalText((string) ($input['hero_title'] ?? $current['hero_title'] ?? ''), 255, 'hero_title'),
+            'hero_subtitle' => $this->validateOptionalText((string) ($input['hero_subtitle'] ?? $current['hero_subtitle'] ?? ''), 500, 'hero_subtitle'),
+            'hero_cta_primary' => $this->validateOptionalText((string) ($input['hero_cta_primary'] ?? $current['hero_cta_primary'] ?? ''), 60, 'hero_cta_primary'),
+            'hero_cta_secondary' => $this->validateOptionalText((string) ($input['hero_cta_secondary'] ?? $current['hero_cta_secondary'] ?? ''), 60, 'hero_cta_secondary'),
+            'notice_image_url' => $this->validateOptionalAssetPath((string) ($input['notice_image_url'] ?? $current['notice_image_url'] ?? '')),
+            'notice_title' => $this->validateOptionalText((string) ($input['notice_title'] ?? $current['notice_title'] ?? ''), 120, 'notice_title'),
+            'notice_content' => $this->validateOptionalText((string) ($input['notice_content'] ?? $current['notice_content'] ?? ''), 500, 'notice_content'),
+            'service_support_title' => $this->validateOptionalText((string) ($input['service_support_title'] ?? $current['service_support_title'] ?? ''), 120, 'service_support_title'),
+            'service_support_line_1' => $this->validateOptionalText((string) ($input['service_support_line_1'] ?? $current['service_support_line_1'] ?? ''), 120, 'service_support_line_1'),
+            'service_support_line_2' => $this->validateOptionalText((string) ($input['service_support_line_2'] ?? $current['service_support_line_2'] ?? ''), 120, 'service_support_line_2'),
+            'service_support_line_3' => $this->validateOptionalText((string) ($input['service_support_line_3'] ?? $current['service_support_line_3'] ?? ''), 120, 'service_support_line_3'),
+            'service_support_line_4' => $this->validateOptionalText((string) ($input['service_support_line_4'] ?? $current['service_support_line_4'] ?? ''), 120, 'service_support_line_4'),
         ];
 
         $this->syncDefaultLanguage($config['default_language']);
         $stored = $this->systemSettingRepository->put('site', 'config', $config);
+        $this->settingTranslationSyncService->syncSiteConfig($config);
         $this->operationLogService->recordCurrentAction('system', 'system.site.update', 'system_setting', 'site', 'site config updated');
         $this->siteBuildService->queueFullBuild('site_settings_updated', [], current_user());
 
         return ['config' => $stored];
+    }
+
+
+    public function batchTranslatePhrases(): array
+    {
+        $languages = $this->languageRepository->list();
+        $processed = [];
+
+        foreach ($languages as $language) {
+            $code = strtolower(trim((string) ($language['code'] ?? '')));
+            if ($code === '' || $code === 'zh' || (int) ($language['is_enabled'] ?? 1) !== 1) {
+                continue;
+            }
+
+            $overview = $this->sitePhraseWorkspaceRepository->initializeLanguage($code);
+            $processed[] = [
+                'language_code' => $code,
+                'summary' => is_array($overview['summary'] ?? null) ? $overview['summary'] : [],
+            ];
+        }
+
+        $this->operationLogService->recordCurrentAction(
+            'system',
+            'system.site_phrases.batch_translate',
+            'system_setting',
+            ['count' => count($processed)],
+            'site phrases batch translation triggered'
+        );
+
+        return [
+            'processed_count' => count($processed),
+            'items' => $processed,
+        ];
     }
 
     public function sitePhrases(array $filters = []): array
@@ -745,7 +794,7 @@ final class SettingService
             ['id' => 'qwen3-8b', 'name' => 'Qwen3 8B'],
         ];
     }
-    
+
     public function testDeepseekConnection(array $input = []): array
     {
         $testedAt = date('Y-m-d H:i:s');

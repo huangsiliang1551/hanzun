@@ -653,6 +653,44 @@
         if (!mobileFabMedia || !mobileFabMedia.matches) contactFab.classList.add("attention");
         populateSalesContactMenus();
 
+        var contactHoverCloseTimer = 0;
+        var isDesktopContactHover = function () { return !mobileFabMedia || !mobileFabMedia.matches; };
+        var clearContactHoverClose = function () {
+            if (contactHoverCloseTimer) {
+                window.clearTimeout(contactHoverCloseTimer);
+                contactHoverCloseTimer = 0;
+            }
+        };
+        var scheduleContactHoverClose = function () {
+            if (!isDesktopContactHover()) return;
+            clearContactHoverClose();
+            contactHoverCloseTimer = window.setTimeout(function () {
+                closeContactChoosers();
+                closeContactFab();
+                syncContactFabVisibility();
+            }, 220);
+        };
+        var openContactFromHover = function () {
+            if (!isDesktopContactHover()) return;
+            clearContactHoverClose();
+            openContactFab();
+        };
+        ["mouseenter", "pointerenter"].forEach(function (eventName) {
+            contactTrigger.addEventListener(eventName, openContactFromHover);
+        });
+        ["mouseleave", "pointerleave"].forEach(function (eventName) {
+            contactTrigger.addEventListener(eventName, scheduleContactHoverClose);
+        });
+        var floatingMenu = contactFab.querySelector("[data-contact-menu]");
+        if (floatingMenu) {
+            ["mouseenter", "pointerenter"].forEach(function (eventName) {
+                floatingMenu.addEventListener(eventName, openContactFromHover);
+            });
+            ["mouseleave", "pointerleave"].forEach(function (eventName) {
+                floatingMenu.addEventListener(eventName, scheduleContactHoverClose);
+            });
+        }
+
         contactChoosers.forEach(function (chooser) {
             var trigger = chooser.querySelector("[data-contact-chooser-trigger]");
             var options = chooser.querySelectorAll(".float-option");
@@ -694,7 +732,7 @@
 
     if (backToTopButtons.length) {
         backToTopButtons.forEach(function (button) {
-            button.addEventListener("click", function () { R.scrollToTop(); });
+            button.addEventListener("click", function (event) { event.preventDefault(); event.stopPropagation(); closeContactChoosers(); closeContactFab(); R.scrollToTop(); syncContactFabVisibility(); syncBackToTopVisibility(); });
         });
     }
     if (backToTopButton) {

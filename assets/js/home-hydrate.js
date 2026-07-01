@@ -123,11 +123,11 @@
             if (companyName) node.textContent = companyName;
         });
         Array.prototype.forEach.call(R.brandSubtitleNodes, function (node) {
-            if (!node || String(node.textContent || "").trim() || !companySubtitle) return;
+            if (!node || !companySubtitle) return;
             node.textContent = companySubtitle;
         });
         Array.prototype.forEach.call(R.footerBrandSubtitleNodes, function (node) {
-            if (!node || String(node.textContent || "").trim() || !companySubtitle) return;
+            if (!node || !companySubtitle) return;
             node.textContent = companySubtitle;
         });
         Array.prototype.forEach.call(R.footerBottomNodes, function (node) {
@@ -171,9 +171,8 @@
         var firstItem = items[0];
         if (heroCard && firstItem) {
             var heroHeading = resolveContentTitle(firstItem);
-            var heroSummary = resolveContentSummary(firstItem);
             if (heroTitle && heroHeading) heroTitle.textContent = heroHeading;
-            if (heroKicker && heroSummary) heroKicker.textContent = heroSummary;
+            if (heroKicker) heroKicker.textContent = "";
             updateImageNode(heroImage, resolveContentImage(firstItem, "product", 0), heroHeading);
             bindNavigableCard(heroCard, resolvePublicHref(firstItem, "/products"), heroHeading);
         }
@@ -184,10 +183,9 @@
             var kickerNode = card && card.querySelector(".showcase-kicker");
             var imageNode = card && card.querySelector("img");
             var title = resolveContentTitle(item);
-            var summary = resolveContentSummary(item);
             if (!card || !title) return;
             if (titleNode) titleNode.textContent = title;
-            if (kickerNode && summary) kickerNode.textContent = summary;
+            if (kickerNode) kickerNode.textContent = "";
             updateImageNode(imageNode, resolveContentImage(item, "product", index + 1), title);
             bindNavigableCard(card, resolvePublicHref(item, "/products"), title);
         });
@@ -630,8 +628,38 @@
 
         var fullText = typewriterEl.textContent;
         typewriterEl.setAttribute('data-text', fullText);
-        typewriterEl.classList.add('is-done');
-        revealFollowups();
+
+        if (prefersReducedMotion) {
+            revealFollowups();
+            return;
+        }
+
+        typewriterEl.textContent = '';
+        var caret = document.createElement('span');
+        caret.className = 'typewriter-caret';
+        caret.setAttribute('aria-hidden', 'true');
+        typewriterEl.appendChild(caret);
+
+        var charIndex = 0;
+        var charDelay = 75;
+        var startDelay = 350;
+
+        var typeNext = function () {
+            if (charIndex >= fullText.length) {
+                typewriterEl.classList.add('is-done');
+                setTimeout(function () {
+                    if (caret.parentNode) caret.parentNode.removeChild(caret);
+                    revealFollowups();
+                }, 250);
+                return;
+            }
+            charIndex++;
+            typewriterEl.textContent = fullText.slice(0, charIndex);
+            typewriterEl.appendChild(caret);
+            setTimeout(typeNext, charDelay);
+        };
+
+        setTimeout(typeNext, startDelay);
     }
 
     // 首页才执行（hero 区域仅在首页存在）
