@@ -559,31 +559,27 @@ final class StaticPublisher
     private function deployFullBuildOutputs(string $stagingDir, string $finalDir, array $languageCodes): array
     {
         $failures = [];
+        $codes = $this->expectedFullBuildLanguageCodes($languageCodes, $stagingDir);
 
-        $codes = array_values(array_unique(array_filter(array_merge(
-            $languageCodes,
-            $this->allLanguageCodes(),
-            $this->stageLanguageDirectories($stagingDir)
-        ))));
+        foreach ($this->validateFullBuildStaging($stagingDir, $codes) as $failure) {
+            $failures[] = $failure;
+        }
+
+        if ($failures !== []) {
+            return $failures;
+        }
 
         foreach ($codes as $languageCode) {
             $sourceDir = $stagingDir . DIRECTORY_SEPARATOR . $languageCode;
             $targetDir = $finalDir . DIRECTORY_SEPARATOR . $languageCode;
 
-            if (is_dir($sourceDir)) {
-                try {
-                    $this->syncDirectory($sourceDir, $targetDir);
-                } catch (\Throwable $exception) {
-                    $failures[] = [
-                        'route' => '/' . $languageCode . '/',
-                        'message' => $exception->getMessage(),
-                    ];
-                }
-                continue;
-            }
-
-            if (is_dir($targetDir)) {
-                $this->removeDirectory($targetDir);
+            try {
+                $this->syncDirectory($sourceDir, $targetDir);
+            } catch (\Throwable $exception) {
+                $failures[] = [
+                    'route' => '/' . $languageCode . '/',
+                    'message' => $exception->getMessage(),
+                ];
             }
         }
 
@@ -593,6 +589,66 @@ final class StaticPublisher
 
         foreach ($this->syncRootPublicDirectories($stagingDir, $finalDir) as $failure) {
             $failures[] = $failure;
+        }
+
+        return $failures;
+    }
+
+    /**
+     * @param array<int, string> $languageCodes
+     * @return array<int, string>
+     */
+    private function expectedFullBuildLanguageCodes(array $languageCodes, string $stagingDir): array
+    {
+        return array_values(array_unique(array_filter(array_merge(
+            $languageCodes,
+            $this->allLanguageCodes(),
+            $this->stageLanguageDirectories($stagingDir)
+        ))));
+    }
+
+    /**
+     * @param array<int, string> $languageCodes
+     * @return array<int, array{route:string,message:string}>
+     */
+    private function validateFullBuildStaging(string $stagingDir, array $languageCodes): array
+    {
+        if (!is_dir($stagingDir)) {
+            return [[
+                'route' => '[deploy]',
+                'message' => 'full build staging directory is missing; publish stopped to keep existing static pages: ' . $stagingDir,
+            ]];
+        }
+
+        $failures = [];
+        foreach ($languageCodes as $languageCode) {
+            $sourceDir = $stagingDir . DIRECTORY_SEPARATOR . $languageCode;
+            $indexFile = $sourceDir . DIRECTORY_SEPARATOR . 'index.html';
+
+            if (!is_dir($sourceDir)) {
+                $failures[] = [
+                    'route' => '/' . $languageCode . '/',
+                    'message' => 'full build staging language directory is missing; publish stopped to keep existing static pages: ' . $sourceDir,
+                ];
+                continue;
+            }
+
+            if (!is_file($indexFile)) {
+                $failures[] = [
+                    'route' => '/' . $languageCode . '/index.html',
+                    'message' => 'full build staging language homepage is missing; publish stopped to keep existing static pages: ' . $indexFile,
+                ];
+            }
+        }
+
+        foreach (['index.html', 'robots.txt', 'sitemap.xml'] as $filename) {
+            $sourcePath = $stagingDir . DIRECTORY_SEPARATOR . $filename;
+            if (!is_file($sourcePath)) {
+                $failures[] = [
+                    'route' => '/' . $filename,
+                    'message' => 'full build staging root file is missing; publish stopped to keep existing static pages: ' . $sourcePath,
+                ];
+            }
         }
 
         return $failures;
@@ -619,13 +675,10 @@ final class StaticPublisher
             }
 
             if (is_file($targetPath)) {
-                if (!@unlink($targetPath)) {
-                    $error = error_get_last();
-                    $failures[] = [
-                        'route' => '/' . $filename,
-                        'message' => '无法删除旧文件: ' . $targetPath . ' (' . (is_array($error) && isset($error['message']) ? (string) $error['message'] : 'unlink() failed') . ')',
-                    ];
-                }
+                $failures[] = [
+                    'route' => '/' . $filename,
+                    'message' => 'full build staging root file is missing; existing root file was kept: ' . $sourcePath,
+                ];
             }
         }
 
@@ -653,14 +706,10 @@ final class StaticPublisher
             }
 
             if (is_dir($targetPath)) {
-                try {
-                    $this->removeDirectory($targetPath);
-                } catch (\Throwable $exception) {
-                    $failures[] = [
-                        'route' => '/' . $directory . '/',
-                        'message' => $exception->getMessage(),
-                    ];
-                }
+                $failures[] = [
+                    'route' => '/' . $directory . '/',
+                    'message' => 'full build staging public directory is missing; existing public directory was kept: ' . $sourcePath,
+                ];
             }
         }
 
@@ -765,6 +814,10 @@ final class StaticPublisher
      */
     private function stageLanguageDirectories(string $stagingDir): array
     {
+        if (!is_dir($stagingDir)) {
+            return [];
+        }
+
         $items = scandir($stagingDir);
         if (!is_array($items)) {
             return [];
