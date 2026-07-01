@@ -825,16 +825,27 @@ final class StaticPublisher
 
         $codes = [];
         foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
+            if ($item === "." || $item === "..") {
                 continue;
             }
 
+            $normalizedCode = strtolower(trim($item));
             $path = $stagingDir . DIRECTORY_SEPARATOR . $item;
+
             if (!is_dir($path)) {
                 continue;
             }
 
-            $codes[] = strtolower(trim($item));
+            if (!preg_match('/^[a-z]{2}(?:-[a-z]{2})?$/', $normalizedCode)) {
+                continue;
+            }
+
+            $indexFile = $path . DIRECTORY_SEPARATOR . "index.html";
+            if (!is_file($indexFile)) {
+                continue;
+            }
+
+            $codes[] = $normalizedCode;
         }
 
         return $codes;
